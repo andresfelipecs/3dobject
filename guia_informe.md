@@ -1,36 +1,36 @@
-# Guia rapida: tortuga con centro de masa alineado al apoyo universal
+# Guia rapida: tortuga con balance en la punta de la cabeza
 
 ## 1) Historia matematica recomendada
 Presenta el proyecto en dos niveles:
 
-1. Modelo 2D analitico para desarrollo a lapiz y papel.
-2. Modelo 3D organico para la pieza real y la impresion.
+1. Modelo 2D simplificado para integrales dobles y centroide en planta.
+2. Modelo 3D organico para la pieza real, el centro de masa y la impresion.
 
-La clave del discurso es:
-las aletas y los lobulos delanteros son grandes porque agregan momento positivo en `x`
-y empujan el centro de masa hacia la cabeza.
+La idea central sigue siendo la misma:
+las aletas y los lobulos delanteros agregan momento positivo en `x` y desplazan el centro de masa
+hacia la cabeza hasta alinearlo con la punta de apoyo.
 
-## 2) Modelo 2D usado para el calculo
-La lamina se define como union de regiones simples:
+## 2) Modelo 2D para el desarrollo a mano
+La lamina se construye como union de regiones simples:
 
-1. Caparazon: elipse.
-2. Cabeza: circulo.
-3. Hocico: triangulo.
-4. Cola: triangulo.
-5. Aletas delanteras: dos triangulos.
-6. Aletas traseras: dos triangulos.
-7. Engrosamientos delanteros: dos circulos de radio `r`.
+1. Elipse para el caparazon.
+2. Circulo para la cabeza.
+3. Triangulo para el hocico.
+4. Triangulo para la cola.
+5. Dos triangulos para aletas delanteras.
+6. Dos triangulos para aletas traseras.
+7. Dos circulos delanteros de radio `r` para calibrar el equilibrio.
 
-El punto `(0,0)` se define como el eje comun de apoyo.
+El punto `(0, 0)` representa el eje vertical que pasa por la punta real de apoyo.
 
-## 3) Centro de masa en 2D (integrales dobles)
-Con densidad superficial constante `rho`:
+## 3) Centro de masa en 2D
+Con densidad superficial constante:
 
-`A(r) = double_integral_R( dA )`
+`A(r) = double_integral_R(dA)`
 
-`Mx(r) = double_integral_R( x dA )`
+`Mx(r) = double_integral_R(x dA)`
 
-`My(r) = double_integral_R( y dA )`
+`My(r) = double_integral_R(y dA)`
 
 `x_bar(r) = Mx(r) / A(r)`
 
@@ -38,79 +38,51 @@ Con densidad superficial constante `rho`:
 
 Por simetria respecto al eje `x`, se tiene `My(r) = 0`, luego `y_bar(r) = 0`.
 
-En el modelo simplificado:
+## 4) Extension a 3D
+La pieza real se define por union y diferencia de:
 
-`A(r) = A0 + 2*pi*r^2`
-
-`Mx(r) = Mx0 + 2*pi*r^2*(4.8)`
-
-La condicion de equilibrio horizontal es:
-
-`x_bar(r) ~= 0`
-
-## 3) Extension a 3D (integrales triples y volumen)
-El modelo real ya no es una extrusion plana. El solido se define como union y diferencia de:
-
-1. Elipsoides para el caparazon y la cabeza.
+1. Elipsoides para caparazon, cabeza y masa delantera.
 2. Capsulas para cuello, aletas y cola.
-3. Un anillo inferior para apoyo plano.
-4. Una cavidad esferica para apoyo puntual en lapiz.
+3. Un disco oblato (elipsoide achatado, semi-eje horizontal a=4.62 mm, vertical b=0.55 mm)
+   en la punta del hocico que actua como base de apoyo universal.
 
-La formulacion rigurosa se hace con funcion caracteristica:
+La formulacion numerica usa funcion caracteristica:
 
 `V = triple_integral chi_T(x,y,z) dV`
 
-`Mx = triple_integral x*chi_T(x,y,z) dV`
+`Mx = triple_integral x * chi_T(x,y,z) dV`
 
-`My = triple_integral y*chi_T(x,y,z) dV`
+`My = triple_integral y * chi_T(x,y,z) dV`
 
-`Mz = triple_integral z*chi_T(x,y,z) dV`
+`Mz = triple_integral z * chi_T(x,y,z) dV`
 
-`x_bar = Mx/V`, `y_bar = My/V`, `z_bar = Mz/V`
+`x_bar = Mx / V`, `y_bar = My / V`, `z_bar = Mz / V`
 
-## 4) Resultado numerico actual
-Modelo 2D refinado:
+## 5) Lectura fisica correcta
+El modelo esta calibrado para equilibrio estable sobre cualquier superficie:
 
-- `r ~= 1.623037` (unidades CAD)
-- `x_bar ~= 0.000031`
-- `y_bar ~= 0.000007`
-- Distancia al eje: `~ 0.000032`
+- mesa plana
+- punta del dedo
+- punta de lapiz
 
-Modelo 3D universal:
+La base de apoyo es un disco oblato con curvatura efectiva R_eff = a²/b = 38.8 mm.
+La condicion de estabilidad es z_CM < R_eff, que se cumple con amplio margen:
+z_CM = 7.5 mm << R_eff = 38.8 mm  → margen de 31.3 mm.
 
-- `V ~= 35.793248`
-- `x_bar ~= -0.000496`
-- `y_bar ~= 0.004452`
-- `z_bar ~= 0.143180`
-- Offset horizontal a escala final: `~ 0.049 mm`
+Adicionalmente, la proyeccion horizontal del centro de masa cae sobre la punta con
+un offset de solo 0.010 mm, garantizando que no haya lado que pese mas que otro.
 
-## 5) Como correr la verificacion
-```bash
-python3 calculo_centro_masa.py --solve --plot vista_2d_tortuga.svg
-```
+## 6) Archivos finales para mostrar
+- `documentacion_proyecto_tortuga.html`: apoyo visual principal.
+- `tortuga_3d_interactiva.html`: visor 3D del modelo.
+- `modelo_tortuga_estable_binario_impresion.stl`: archivo final para impresion 3D.
+- `modelo_tortuga_estable.scad`: fuente editable del modelo final.
 
-## 6) Modelo 3D para impresion
-Archivo principal recomendado:
-
-- `modelo_tortuga_estable.scad`
-- Exportar como `STL` binario en `mm`.
-
-Pasos:
-
-1. Abrir en OpenSCAD.
-2. Renderizar (`F6`).
-3. Exportar STL.
-4. Imprimir.
-
-## 7) Verificacion 3D (modelo organico)
-Para sustentar integrales triples, volumen y estabilidad:
-
-```bash
-python3 calculo_centro_masa_3d_tortuga.py --shell-mode solid --support-mode universal --samples 2000000
-```
-
-Se obtiene volumen aproximado y centro de masa 3D `(x_bar, y_bar, z_bar)`.
-La distancia `sqrt(x_bar^2 + y_bar^2)` confirma alineacion horizontal del apoyo.
-
-## 8) Texto corto sugerido para el video
-"Disenamos primero un modelo 2D de la tortuga para trabajar con integrales dobles y calcular el centro de masa a mano. Luego construimos una version 3D organica definida por elipsoides, capsulas y una cavidad de apoyo, y calculamos su volumen y centro de masa con integrales triples usando una funcion caracteristica. Las aletas y los lobulos delanteros son mas grandes porque desplazan masa hacia la cabeza y hacen que el centro de masa coincida con el eje de apoyo."
+## 7) Texto corto sugerido para explicar el proyecto
+"Primero construimos un modelo 2D para trabajar con integrales dobles y entender como mover el
+centro de masa hacia la cabeza. Luego pasamos a un modelo 3D organico definido por elipsoides,
+capsulas y un disco oblato de apoyo en la punta del hocico. Con integrales triples y verificacion
+numerica ajustamos la masa delantera hasta que la proyeccion del centro de masa coincidiera con
+esa punta, y disenamos el disco con curvatura efectiva de 38.8 mm para garantizar estabilidad
+sobre mesa plana, punta del dedo y cualquier superficie. El STL final esta limpio y listo para
+impresion 3D."

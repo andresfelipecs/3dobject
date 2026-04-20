@@ -3,506 +3,306 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tortuga 3D - Desarrollo matematico de centro de masa</title>
+  <title>Tortuga 3D - Balance en la punta de la cabeza</title>
   <style>
     :root {
-      --bg-primary: #0f172a;
-      --bg-card: rgba(30, 41, 59, 0.7);
-      --bg-card-hover: rgba(30, 41, 59, 0.9);
-      --border: rgba(148, 163, 184, 0.1);
-      --border-hover: rgba(148, 163, 184, 0.3);
-      --accent-alpha: #10b981;
-      --accent-beta: #3b82f6;
-      --accent-gamma: #8b5cf6;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --radius-lg: 20px;
-      --radius-md: 12px;
-      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --bg: #f4efe5;
+      --ink: #1f2a22;
+      --muted: #5d695d;
+      --card: rgba(255, 251, 244, 0.88);
+      --line: rgba(31, 42, 34, 0.12);
+      --accent: #2d6a4f;
+      --accent-2: #9c6644;
+      --accent-3: #386641;
+      --shadow: 0 22px 55px rgba(66, 43, 20, 0.12);
+      --radius: 24px;
     }
-    *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      color: var(--text-main);
-      background: var(--bg-primary);
-      font-family: 'Inter', system-ui, sans-serif;
-      line-height: 1.6;
-      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(214, 163, 92, 0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(45, 106, 79, 0.16), transparent 32%),
+        linear-gradient(180deg, #f7f1e5 0%, #efe6d6 100%);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.65;
     }
-    
-    /* Background effects */
-    .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-    .bg-mesh::before {
-      content: ''; position: absolute; width: 800px; height: 800px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
-      top: -200px; left: -200px; animation: drift1 20s ease-in-out infinite alternate;
-    }
-    .bg-mesh::after {
-      content: ''; position: absolute; width: 600px; height: 600px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
-      bottom: -100px; right: -100px; animation: drift2 15s ease-in-out infinite alternate;
-    }
-    @keyframes drift1 { from { transform: translate(0, 0) scale(1); } to { transform: translate(100px, 80px) scale(1.1); } }
-    @keyframes drift2 { from { transform: translate(0, 0) scale(1); } to { transform: translate(-80px, -100px) scale(1.2); } }
 
     .wrap {
-      position: relative;
-      z-index: 1;
-      max-width: 1200px;
-      margin: 40px auto 80px;
-      padding: 0 20px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 20px 72px;
     }
-    .sheet, .card {
-      background: var(--bg-card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+
+    .hero,
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
-      transition: all 0.3s ease;
     }
-    .card:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-hover);
-      transform: translateY(-4px);
-    }
-    .sheet {
+
+    .hero {
       padding: 40px;
       margin-bottom: 24px;
-      text-align: center;
-      background: linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.6) 100%);
+      position: relative;
+      overflow: hidden;
     }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -80px auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45, 106, 79, 0.18), transparent 70%);
+      pointer-events: none;
+    }
+
     .eyebrow {
       display: inline-block;
-      padding: 6px 16px;
-      border-radius: 30px;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: var(--accent-alpha);
+      padding: 8px 14px;
+      border-radius: 999px;
+      letter-spacing: 0.08em;
       font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
       text-transform: uppercase;
-      margin-bottom: 16px;
+      background: rgba(45, 106, 79, 0.10);
+      color: var(--accent);
+      border: 1px solid rgba(45, 106, 79, 0.18);
     }
-    h1, h2, h3 { margin: 0 0 12px; line-height: 1.2; font-weight: 800; }
+
+    h1, h2, h3 {
+      margin: 0 0 14px;
+      line-height: 1.12;
+      font-weight: 700;
+    }
+
     h1 {
-      font-size: clamp(2.2rem, 5vw, 3.5rem);
-      background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 20px;
-      letter-spacing: -0.02em;
+      margin-top: 16px;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      max-width: 12ch;
     }
+
     h2 {
-      font-size: 24px;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
+      font-size: 1.65rem;
+      color: var(--accent-3);
     }
-    h2::before {
-      content: '';
-      display: block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--accent-beta);
-      box-shadow: 0 0 10px var(--accent-beta);
-    }
+
     p { margin: 0 0 16px; }
-    .muted { color: var(--text-muted); font-size: 1.1rem; }
-    .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px; }
-    .card { grid-column: span 12; padding: 32px; }
+    .muted { color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      grid-column: span 12;
+      padding: 30px;
+    }
+
     .half { grid-column: span 6; }
+
+    .note, .warning, .formula {
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin: 18px 0;
+    }
+
+    .note {
+      background: rgba(45, 106, 79, 0.10);
+      border: 1px solid rgba(45, 106, 79, 0.18);
+    }
+
+    .warning {
+      background: rgba(156, 102, 68, 0.10);
+      border: 1px solid rgba(156, 102, 68, 0.20);
+    }
+
     .formula {
-      margin: 20px 0;
-      padding: 20px;
-      border-radius: var(--radius-md);
-      background: rgba(0, 0, 0, 0.3);
-      border-left: 4px solid var(--accent-gamma);
-      font-family: 'JetBrains Mono', Consolas, monospace;
-      font-size: 15px;
-      color: #e2e8f0;
-      overflow-x: auto;
+      background: #f9f5ed;
+      border: 1px solid rgba(31, 42, 34, 0.08);
+      font-family: "Courier New", monospace;
       white-space: pre-wrap;
     }
-    .note {
-      margin: 20px 0;
-      padding: 20px;
-      border-radius: var(--radius-md);
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      color: #93c5fd;
+
+    ul {
+      margin: 12px 0 0 22px;
+      padding: 0;
     }
-    .warn { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
-    th, td { border-bottom: 1px solid var(--border); padding: 14px 12px; text-align: left; }
-    th { color: var(--accent-alpha); font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
-    code, pre { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 14px; }
-    code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #cbd5e1; }
-    pre { margin: 20px 0; padding: 20px; border-radius: var(--radius-md); background: #0f172a; color: #e2e8f0; overflow-x: auto; border: 1px solid var(--border); }
-    iframe { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); background: transparent; }
-    .svg-frame { min-height: 840px; background: rgba(255,255,255,0.05); }
-    .plot-frame { min-height: 760px; background: rgba(255,255,255,0.05); }
-    .files { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
-    .files a {
-      display: inline-flex;
-      align-items: center;
-      padding: 10px 16px;
-      border-radius: var(--radius-md);
-      text-decoration: none;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    .files a::before { content: '📄'; margin-right: 8px; }
-    .files a:hover { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-alpha); color: var(--accent-alpha); transform: translateY(-2px); }
-    ul, ol { margin: 12px 0 12px 24px; color: var(--text-muted); }
+
     li { margin-bottom: 8px; }
-    
+
+    code, pre {
+      font-family: "Courier New", monospace;
+      font-size: 0.95rem;
+    }
+
+    pre {
+      background: #1d2a22;
+      color: #f8f4ec;
+      padding: 20px;
+      border-radius: 18px;
+      overflow-x: auto;
+    }
+
+    iframe {
+      width: 100%;
+      min-height: 760px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.5);
+    }
+
+    .files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .files a {
+      text-decoration: none;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.55);
+    }
+
+    .files a:hover {
+      border-color: rgba(45, 106, 79, 0.35);
+      color: var(--accent);
+    }
+
     @media (max-width: 920px) {
       .half { grid-column: span 12; }
-      .sheet, .card { padding: 24px; }
-      .svg-frame, .plot-frame { min-height: 540px; }
+      .hero, .card { padding: 24px; }
+      iframe { min-height: 520px; }
     }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
 <body>
-  <div class="bg-mesh"></div>
   <div class="wrap">
-    <section class="sheet">
-      <span class="eyebrow">Calculo 2 + Modelado 3D</span>
-      <h1>Tortuga 3D con centro de masa alineado al apoyo universal</h1>
+    <section class="hero">
+      <span class="eyebrow">Calculo 2 + Impresion 3D</span>
+      <h1>Tortuga 3D equilibrada sobre la punta de la cabeza</h1>
       <p class="muted">
-        Documento de desarrollo matematico: ecuaciones del objeto, integrales dobles y triples,
-        criterio de estabilidad y visualizacion 3D embebida.
+        El proyecto quedo corregido para que el modelo OpenSCAD, el calculo del centro de masa,
+        el visor 3D y el STL describan exactamente la misma tortuga.
       </p>
       <div class="note">
-        La idea central del proyecto es esta: mover masa hacia la parte delantera para que la
-        proyeccion del centro de masa coincida con el eje de apoyo. Por eso las aletas delanteras
-        y los lobulos frontales son grandes: aumentan el momento positivo en <code>x</code> y
-        desplazan el centro de masa hacia la cabeza.
+        La punta real de apoyo es el punto <code>(0,0,0)</code> del hocico. La masa delantera se
+        calibra con los lobulos frontales hasta que la proyeccion del centro de masa caiga sobre
+        esa vertical con un offset de solo <strong>0.010 mm</strong>.
+      </div>
+      <div class="note">
+        La base de apoyo es un <strong>disco oblato</strong> (a = 4.62 mm, b = 0.55 mm) con
+        curvatura efectiva R<sub>eff</sub> = a&sup2;/b = <strong>38.8 mm</strong>.
+        Como z<sub>CM</sub> = 7.5 mm &lt;&lt; R<sub>eff</sub>, la tortuga es
+        <strong>estable sobre mesa plana y sobre la punta del dedo</strong> sin caerse.
+        Angulo maximo antes de volcar: <strong>31.6&deg;</strong>.
       </div>
     </section>
 
     <div class="grid">
-      <article class="card">
-        <h2>1. Sistema de coordenadas y objetivo</h2>
-        <p>
-          Se toma el origen en el eje comun de apoyo. En la vista en planta, el eje
-          <code>x</code> apunta hacia la cabeza, el eje <code>y</code> hacia los costados y el
-          eje <code>z</code> hacia arriba. La condicion buscada es:
-        </p>
-        <div class="formula">
-x̄ ≈ 0,   ȳ ≈ 0
-
-para que la proyeccion del centro de masa caiga sobre el eje de apoyo.
-        </div>
-        <p>
-          Para apoyo plano adicionalmente se exige que la proyeccion del centro de masa quede
-          dentro del area de apoyo. Para apoyo puntual en lapiz se exige que el centro de masa
-          quede por debajo del centro de curvatura de la cavidad esferica.
-        </p>
-      </article>
-
-      <article class="card">
-        <h2>2. Modelo analitico 2D para el desarrollo a lapiz y papel</h2>
-        <p>
-          El modelo 2D se define como una union de regiones simples. Esta es la parte que mejor se
-          presta para el desarrollo manual de Cálculo 2.
-        </p>
-        <div class="formula">
-E = { (x,y) : ((x + 3.4) / 3.1)² + (y / 2.2)² ≤ 1 }
-
-H = { (x,y) : (x + 1.0)² + y² ≤ 0.95² }
-
-C⁺(r) = { (x,y) : (x - 4.8)² + (y - 2.1)² ≤ r² }
-C⁻(r) = { (x,y) : (x - 4.8)² + (y + 2.1)² ≤ r² }
-
-R(r) = E ∪ H ∪ B ∪ T ∪ F⁺ ∪ F⁻ ∪ R⁺ ∪ R⁻ ∪ C⁺(r) ∪ C⁻(r)
-        </div>
-        <p>
-          Los triangulos del hocico, cola y aletas se toman con los vertices definidos en el
-          archivo <code>calculo_centro_masa.py</code>. Por simetria respecto al eje <code>x</code>,
-          se tiene inmediatamente:
-        </p>
-        <div class="formula">
-Mᵧ(r) = ∬<sub>R(r)</sub> y dA = 0   ⇒   ȳ(r) = 0
-        </div>
-      </article>
-
       <article class="card half">
-        <h2>3. Integrales dobles y centro de masa 2D</h2>
-        <div class="formula">
-A(r) = ∬<sub>R(r)</sub> dA
-
-M<sub>x</sub>(r) = ∬<sub>R(r)</sub> x dA
-
-M<sub>y</sub>(r) = ∬<sub>R(r)</sub> y dA
-
-x̄(r) = M<sub>x</sub>(r) / A(r)
-
-ȳ(r) = M<sub>y</sub>(r) / A(r)
-        </div>
+        <h2>1. Modelo matematico 2D</h2>
         <p>
-          Para el desarrollo manual, cada pieza simple aporta area y primer momento. Si la pieza
-          tiene area <code>Aᵢ</code> y centroide <code>(xᵢ, yᵢ)</code>, entonces:
+          Para el desarrollo manual de Calculo 2 se usa una lamina simplificada: caparazon,
+          cabeza, hocico, cola, aletas y dos circulos delanteros que actuan como masa de ajuste.
         </p>
-        <div class="formula">
-M<sub>x</sub> = Σ Aᵢ xᵢ,   M<sub>y</sub> = Σ Aᵢ yᵢ
-        </div>
+        <div class="formula">A(r) = ∬_R dA
+Mx(r) = ∬_R x dA
+My(r) = ∬_R y dA
+x̄(r) = Mx(r) / A(r)
+ȳ(r) = My(r) / A(r)</div>
         <p>
-          Los dos circulos delanteros son la variable de diseño. Como sus centros estan en
-          <code>x = 4.8</code>, su aporte a <code>M<sub>x</sub></code> es positivo y por eso
-          “jalan” el centro de masa hacia la cabeza.
+          Por simetria respecto al eje longitudinal se tiene <code>ȳ = 0</code>. El papel del
+          parametro de ajuste es llevar <code>x̄</code> a cero.
         </p>
       </article>
 
       <article class="card half">
-        <h2>4. Formulas exactas de las piezas simples</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Pieza</th>
-              <th>Area</th>
-              <th>Centroide en x</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Elipse del caparazon</td>
-              <td>A = πab = π(3.1)(2.2)</td>
-              <td>x = -3.4</td>
-            </tr>
-            <tr>
-              <td>Circulo de la cabeza</td>
-              <td>A = πr² = π(0.95)²</td>
-              <td>x = -1.0</td>
-            </tr>
-            <tr>
-              <td>Triangulo</td>
-              <td>A = |det(P₂-P₁, P₃-P₁)| / 2</td>
-              <td>x = (x₁ + x₂ + x₃) / 3</td>
-            </tr>
-            <tr>
-              <td>Cada circulo delantero</td>
-              <td>A = πr²</td>
-              <td>x = 4.8</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="formula">
-A(r) = A₀ + 2πr²
-
-M<sub>x</sub>(r) = M<sub>x,0</sub> + 2πr²(4.8)
-        </div>
+        <h2>2. Modelo 3D real</h2>
         <p>
-          En el modelo analitico simplificado sin corregir traslapes, la solucion manual da:
+          La pieza fisica se construye con elipsoides, capsulas y un <strong>disco oblato</strong>
+          de apoyo en la punta del hocico (diametro 9.2 mm, altura 1.1 mm).
+          El caparazon es hueco para quitar masa trasera y las aletas delanteras son mas
+          robustas para adelantar el centro de masa.
         </p>
-        <div class="formula">
-r = √( - M<sub>x,0</sub> / (9.6π) ) ≈ 1.690416
-        </div>
+        <div class="formula">V = ∭ χ_T(x,y,z) dV
+Mx = ∭ x χ_T dV
+My = ∭ y χ_T dV
+Mz = ∭ z χ_T dV
+x̄ = Mx / V, ȳ = My / V, z̄ = Mz / V</div>
         <p>
-          Luego se refina sobre la union geometrica exacta con la grilla del script y se obtiene
-          el valor final:
-        </p>
-        <div class="formula">
-r ≈ 1.623037,   x̄ ≈ 0.000031,   ȳ ≈ 0.000007
-        </div>
-      </article>
-
-      <article class="card">
-        <h2>5. Del plano al solido 3D</h2>
-        <p>
-          Para la pieza real ya no basta una extrusion plana. Se modela un solido organico por
-          union y diferencia de elipsoides, capsulas y superficies de apoyo. La definicion exacta
-          usada por el script es:
-        </p>
-        <div class="formula">
-E₁ = { (x,y,z) : ((x + 2.0)/1.9)² + (y/1.95)² + ((z - 0.25)/1.25)² ≤ 1 }
-
-E₂ = { (x,y,z) : ((x + 2.1)/1.52)² + (y/1.55)² + ((z - 0.95)/1.0)² ≤ 1 }
-
-Capsula(P₀, P₁, r) = { Q : dist(Q, segmento(P₀,P₁)) ≤ r }
-
-Anillo = { (x,y,z) : 0.24² ≤ x² + y² ≤ 0.55², |z + 0.22| ≤ 0.08 }
-
-Cavidad = { (x,y,z) : x² + y² + (z - 0.58)² ≤ 0.94² }
-        </div>
-        <div class="formula">
-T = (Caparazon ∪ Cabeza ∪ Cuello ∪ Aletas ∪ Cola ∪ LobulosFrontales ∪ Anillo) \ Cavidad
-        </div>
-        <p>
-          Esa definicion es rigurosa y es la que usa el verificador numérico. El archivo
-          <code>modelo_tortuga_estable.scad</code> implementa la misma idea en OpenSCAD.
-        </p>
-      </article>
-
-      <article class="card half">
-        <h2>6. Volumenes de las piezas que mueven el equilibrio</h2>
-        <p>
-          La pieza clave son los dos lobulos delanteros. Cada uno es un elipsoide de semiejes
-          <code>1.2s</code>, <code>0.82s</code> y <code>0.36s</code>.
-        </p>
-        <div class="formula">
-V<sub>lobulo</sub>(s) = (4/3)π(1.2s)(0.82s)(0.36s)
-
-V<sub>lobulo</sub>(1.664025) ≈ 6.852459
-        </div>
-        <p>
-          Como ambos lobulos estan centrados en <code>x = 3.55</code>, aportan un momento positivo
-          grande:
-        </p>
-        <div class="formula">
-M<sub>x,lobulos</sub>(s) = 2 · V<sub>lobulo</sub>(s) · 3.55
-        </div>
-        <p>
-          Esa es la razon matematica de que las “manos delanteras” y los engrosamientos frontales
-          sean grandes: su funcion no es solo estetica, sino desplazar masa hacia adelante para que
-          el centro de masa coincida con el eje de apoyo.
-        </p>
-      </article>
-
-      <article class="card half">
-        <h2>7. Integrales triples del centro de masa</h2>
-        <div class="formula">
-χ<sub>T</sub>(x,y,z) = 1  si (x,y,z) pertenece al solido T
-χ<sub>T</sub>(x,y,z) = 0  en otro caso
-
-V = ∭ χ<sub>T</sub>(x,y,z) dV
-
-M<sub>x</sub> = ∭ x χ<sub>T</sub>(x,y,z) dV
-M<sub>y</sub> = ∭ y χ<sub>T</sub>(x,y,z) dV
-M<sub>z</sub> = ∭ z χ<sub>T</sub>(x,y,z) dV
-
-x̄ = M<sub>x</sub> / V,   ȳ = M<sub>y</sub> / V,   z̄ = M<sub>z</sub> / V
-        </div>
-        <p>
-          Como la geometria final incluye traslapes, uniones y una diferencia booleana por la
-          cavidad, la evaluacion se hace con integracion de Monte Carlo sobre la funcion
-          caracteristica. Eso sigue siendo un uso legitimo de integrales triples: solo cambia el
-          metodo de evaluacion.
+          La verificacion numerica se hace con Monte Carlo usando la misma geometria que el STL.
         </p>
       </article>
 
       <article class="card">
-        <h2>8. Criterios de estabilidad</h2>
+        <h2>3. Criterio fisico correcto</h2>
         <p>
-          Para que la pieza no solo tenga torque cero sino equilibrio util, se impusieron dos
-          criterios adicionales.
-        </p>
-        <div class="formula">
-Mesa / dedo ancho:
-
-√(x̄² + ȳ²) < R<sub>anillo</sub> = 0.55
-        </div>
-        <div class="formula">
-Lapiz / apoyo puntual:
-
-z̄ < z<sub>centro de curvatura</sub> = 0.58
-        </div>
-        <p>
-          Con la configuracion universal actual, los resultados son:
-        </p>
-        <div class="formula">
-V ≈ 35.793248
-x̄ ≈ -0.000496
-ȳ ≈ 0.004452
-z̄ ≈ 0.143180
-√(x̄² + ȳ²) ≈ 0.004480
-        </div>
-        <div class="note">
-          A escala final de impresion (<code>11 mm</code> por unidad CAD), el desfase horizontal del
-          centro de masa es de apenas <strong>0.049 mm</strong>. La pieza queda estable sobre mesa,
-          sobre dedo ancho y tambien sobre punta de lapiz gracias a la cavidad esferica.
-        </div>
-      </article>
-
-      <article class="card half">
-        <h2>9. Resultado final para impresion</h2>
-        <div class="formula">
-Volumen escalado = 35.793248 · 11³ / 1000 ≈ 47.64 ml
-PLA solido ≈ 47.64 · 1.24 ≈ 59.07 g
-        </div>
-        <p>
-          La recomendacion para laboratorio es:
+          Hay dos condiciones que el modelo cumple simultaneamente:
+          (1) la proyeccion horizontal del CM cae sobre la punta (offset 0.010 mm) — no hay lado
+          que pese mas que otro; (2) la curvatura del disco de apoyo satisface z<sub>CM</sub> &lt;
+          R<sub>eff</sub> — la tortuga se auto-centra tras cualquier perturbacion pequena.
         </p>
         <ul>
-          <li><strong>Archivo:</strong> STL binario en mm.</li>
-          <li><strong>Proceso:</strong> FDM en PLA.</li>
-          <li><strong>Relleno:</strong> 100% para mantener la distribucion de masa prevista.</li>
-          <li><strong>Escala:</strong> la pieza ya sale en mm desde OpenSCAD con <code>scale_mm = 11</code>.</li>
+          <li><strong>Mesa plana:</strong> z<sub>CM</sub> 7.5 mm &lt;&lt; R<sub>eff</sub> 38.8 mm &rarr; estable, angulo de vuelco 31.6&deg;.</li>
+          <li><strong>Punta del dedo:</strong> z<sub>CM</sub> 7.5 mm &lt; R<sub>dedo</sub> 8&ndash;12 mm &rarr; estable.</li>
+          <li><strong>Punta de lapiz:</strong> el disco encaja sobre la punta y queda guiado lateralmente.</li>
+          <li>Holgura geometrica fuera del disco: 0.66 mm &rarr; ninguna otra pieza toca el suelo.</li>
         </ul>
       </article>
 
       <article class="card half">
-        <h2>10. STL binario en mm</h2>
+        <h2>4. Impresion 3D</h2>
         <p>
-          El laboratorio pide STL binario y unidades en milimetros. El modelo ya esta escalado en
-          milimetros dentro de OpenSCAD. El comando recomendado es:
+          El archivo final de impresion es <strong>modelo_tortuga_estable_binario_impresion.stl</strong>.
+          Ese STL ya quedo revisado para asegurar que la malla este cerrada, no tenga triangulos
+          degenerados y pueda pasar directamente a slicing.
         </p>
-        <pre>openscad --export-format binstl -o modelo_tortuga_estable.stl modelo_tortuga_estable.scad</pre>
-        <p class="muted">
-          Si prefieres la interfaz grafica: abrir el archivo, renderizar con <code>F6</code> y
-          exportar como STL.
-        </p>
-        <p class="muted">
-          En esta carpeta ya queda generado el archivo final:
-          <code>modelo_tortuga_estable_binario.stl</code>.
-        </p>
-      </article>
-
-      <article class="card">
-        <h2>11. Vista 2D anotada</h2>
-        <p class="muted">
-          La figura siguiente muestra el eje comun de apoyo, el centro de masa en planta, el anillo
-          estable para mesa/dedo y el corte lateral esquematico de la cavidad puntual.
-        </p>
-        <iframe class="svg-frame" src="vista_2d_tortuga.svg" title="Vista 2D anotada de la tortuga"></iframe>
-      </article>
-
-      <article class="card">
-        <h2>12. Visor 3D Interactivo</h2>
         <p>
-          Visor 3D con Plotly integrado para exploración detallada de la geometría, centro de masa y eje de apoyo.
+          La pieza mantiene escala en milimetros. El disco de apoyo (9.2 mm de diametro)
+          garantiza estabilidad en mesa plana y dedo. front_lobe_scale = 2.604525,
+          offset XY del CM = 0.010 mm.
         </p>
-        <iframe class="plot-frame" src="tortuga_3d_interactiva.html" title="Visor 3D interactivo de la tortuga"></iframe>
+      </article>
+
+      <article class="card half">
+        <h2>5. Entrega final</h2>
+        <pre>modelo_tortuga_estable_binario_impresion.stl
+modelo_tortuga_estable.scad
+documentacion_proyecto_tortuga.html
+tortuga_3d_interactiva.html
+guia_informe.md</pre>
       </article>
 
       <article class="card">
-        <h2>13. Archivos del proyecto</h2>
+        <h2>6. Visor 3D</h2>
+        <p>
+          El visor siguiente usa la misma geometria del calculo y marca dos elementos clave: la
+          punta real de apoyo y el centro de masa estimado.
+        </p>
+        <iframe src="tortuga_3d_interactiva.html" title="Visor 3D de la tortuga"></iframe>
+      </article>
+
+      <article class="card">
+        <h2>7. Archivos del proyecto</h2>
+        <p class="muted">Estos son los archivos finales que quedaron listos para presentar y entregar.</p>
         <div class="files">
+          <a href="modelo_tortuga_estable_binario_impresion.stl">modelo_tortuga_estable_binario_impresion.stl</a>
           <a href="modelo_tortuga_estable.scad">modelo_tortuga_estable.scad</a>
-          <a href="modelo_tortuga_estable_binario.stl">modelo_tortuga_estable_binario.stl</a>
-          <a href="calculo_centro_masa_3d_tortuga.py">calculo_centro_masa_3d_tortuga.py</a>
-          <a href="calculo_centro_masa.py">calculo_centro_masa.py</a>
           <a href="tortuga_3d_interactiva.html">tortuga_3d_interactiva.html</a>
-          <a href="vista_2d_tortuga.svg">vista_2d_tortuga.svg</a>
-          <a href="README.md">README.md</a>
+          <a href="guia_informe.md">guia_informe.md</a>
         </div>
-      </article>
-
-      <article class="card">
-        <h2>14. Lectura corta para la exposicion</h2>
-        <p>
-          Primero se construyo un modelo 2D de la tortuga como union de una elipse, un circulo,
-          varios triangulos y dos circulos delanteros de radio variable. Con integrales dobles se
-          calcularon area y primer momento, y se ajusto el radio hasta forzar que el centro de masa
-          quedara sobre el eje de apoyo. Luego se paso a un modelo 3D organico definido por
-          elipsoides, capsulas, un anillo plano y una cavidad esferica. Sobre ese solido se
-          aplicaron integrales triples para volumen y centro de masa mediante una funcion
-          caracteristica e integracion numerica. El resultado final es una tortuga cuyo centro de
-          masa queda alineado con el apoyo y que ademas se estabiliza sobre mesa, dedo y punta de
-          lapiz.
-        </p>
       </article>
     </div>
   </div>

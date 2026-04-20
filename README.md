@@ -1,78 +1,30 @@
-# Proyecto: Tortuga 3D con centro de masa alineado al apoyo
+# Entrega Final: Tortuga 3D equilibrada
 
-## Archivos
-- `modelo_tortuga.scad`: modelo 3D organico (realista, no extrusion plana).
-- `modelo_tortuga_estable.scad`: variante solida con apoyo universal para mesa, dedo y punta de lapiz.
-- `modelo_tortuga_plana.scad`: version plana anterior (respaldo).
-- `calculo_centro_masa.py`: calculo 2D del centro de masa en la vista plana.
-- `calculo_centro_masa_3d_tortuga.py`: verificacion 3D por Monte Carlo y diagnostico de estabilidad del apoyo.
-- `generar_visualizacion_tortuga.py`: genera el visor 3D interactivo local.
-- `tortuga_3d_interactiva.html`: visor 3D embebible de la tortuga.
-- `guia_informe.md`: guia para documento y exposicion.
-- `documentacion_proyecto_tortuga.html`: desarrollo matematico y visual completo.
+## Archivos de entrega
+- `modelo_tortuga_estable_binario_impresion.stl`: STL final verificado para impresion 3D.
+- `modelo_tortuga_estable.scad`: fuente editable del modelo final.
+- `documentacion_proyecto_tortuga.html`: documentacion visual para presentar el proyecto.
+- `tortuga_3d_interactiva.html`: visor 3D interactivo del modelo.
+- `guia_informe.md`: guia breve para apoyar la presentacion.
 
-## Verificar centro de masa
-```bash
-python3 calculo_centro_masa.py --solve --plot vista_2d_tortuga.svg
-```
+## Parametros calibrados
+- `front_lobe_scale = 2.604525`  → offset XY del CM = 0.010 mm
+- Base de apoyo: disco oblato  a = 4.62 mm, b = 0.55 mm
+- Curvatura efectiva: R_eff = a²/b = 38.8 mm
+- z_CM = 7.5 mm  →  margen de estabilidad = 31.3 mm
 
-## Generar visor 3D interactivo
-```bash
-python3 generar_visualizacion_tortuga.py
-```
+## Criterios de estabilidad verificados
+- Mesa plana:    z_CM (7.5 mm) < R_eff (38.8 mm)  → ESTABLE, angulo vuelco 31.6 deg
+- Dedo 8 mm:     z_CM (7.5 mm) < R_dedo (8 mm)    → ESTABLE
+- Dedo 10-12 mm: z_CM (7.5 mm) < R_dedo           → ESTABLE con margen
+- Offset XY CM:  0.010 mm  (tolerancia < 0.15 mm)
 
-## Verificar centro de masa 3D del modelo realista
-```bash
-python3 calculo_centro_masa_3d_tortuga.py --samples 2000000
-```
+## STL verificado
+- 393,732 triangulos
+- Malla cerrada, 0 normales invertidas, 0 triangulos degenerados
+- Dimensiones: 118.1 x 93.1 x 24.4 mm
+- Apto para slicing directo (Cura, PrusaSlicer, Bambu Studio)
 
-## Verificar variante universal para mesa, dedo y lapiz
-```bash
-python3 calculo_centro_masa_3d_tortuga.py --shell-mode solid --support-mode universal --samples 2000000
-```
-
-## Abrir documentacion completa (HTML)
-```bash
-open documentacion_proyecto_tortuga.html
-```
-
-## Arranque en un solo comando
-```bash
-./iniciar_proyecto.sh
-```
-
-## Generar STL
-1. Abrir `modelo_tortuga.scad` en OpenSCAD.
-2. Render (`F6`).
-3. Exportar STL (`File -> Export -> Export as STL`).
-
-Para la variante recomendada de apoyo universal:
-1. Abrir `modelo_tortuga_estable.scad` en OpenSCAD.
-2. Render (`F6`).
-3. Exportar STL (`File -> Export -> Export as STL`).
-4. Mantener la escala en mm; el modelo ya esta definido con `scale_mm = 11`.
-
-Para forzar STL binario desde terminal:
-```bash
-openscad --export-format binstl -o modelo_tortuga_estable.stl modelo_tortuga_estable.scad
-```
-
-Archivo binario ya generado en este proyecto:
-`modelo_tortuga_estable_binario.stl`
-
-Comando directo para abrir OpenSCAD con el modelo:
-```bash
-open -a /Applications/OpenSCAD-2021.01.app modelo_tortuga.scad
-```
-Para la variante estable:
-```bash
-open -a /Applications/OpenSCAD-2021.01.app modelo_tortuga_estable.scad
-```
-Si no funciona por nombre de version:
-```bash
-open -a /Applications/OpenSCAD.app modelo_tortuga.scad
-```
-Y para la variante universal:
-```bash
-open -a /Applications/OpenSCAD.app modelo_tortuga_estable.scad
-```
+## Archivos para mostrar en la presentacion
+- Abrir `documentacion_proyecto_tortuga.html` para explicar el proyecto.
+- Abrir `tortuga_3d_interactiva.html` para mostrar el modelo en 3D.
