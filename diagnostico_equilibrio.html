@@ -1,0 +1,1510 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tortuga v1 — Integrales triples, centro de masa y equilibrio</title>
+  <style>
+    :root {
+      --paper: #f5efe4;
+      --paper-strong: #fffaf1;
+      --ink: #193128;
+      --muted: #5d7568;
+      --green: #3d8b61;
+      --green-deep: #264c3a;
+      --teal: #2d8c8c;
+      --amber: #c97a31;
+      --amber-soft: #f2c792;
+      --red: #be5b45;
+      --line: rgba(39, 65, 50, 0.14);
+      --card: rgba(255, 250, 241, 0.88);
+      --viewer: #0a1512;
+      --shadow: 0 24px 60px rgba(46, 49, 36, 0.12);
+      --radius: 26px;
+      --mono: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      --sans: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(61, 139, 97, 0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(45, 140, 140, 0.12), transparent 24%),
+        linear-gradient(180deg, #f8f4eb 0%, #f3ebdf 100%);
+      line-height: 1.65;
+    }
+
+    a { color: inherit; }
+
+    .page {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 36px 22px 80px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.8fr);
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 26px;
+    }
+
+    .hero-copy,
+    .hero-metrics,
+    .viewer-card,
+    .side-card,
+    .section-card,
+    .note-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-copy {
+      padding: 34px 34px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      right: -80px;
+      top: -100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201, 122, 49, 0.18), transparent 70%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(61, 139, 97, 0.10);
+      color: var(--green-deep);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(61, 139, 97, 0.14);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: var(--serif);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 4vw, 4.3rem);
+      max-width: 12ch;
+      margin-bottom: 18px;
+    }
+
+    .lead {
+      max-width: 58ch;
+      margin: 0 0 18px;
+      font-size: 1.05rem;
+      color: var(--muted);
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .hero-tag {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(25, 49, 40, 0.06);
+      border: 1px solid rgba(25, 49, 40, 0.08);
+      font-size: 0.92rem;
+      color: var(--green-deep);
+      font-weight: 600;
+    }
+
+    .hero-metrics {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      align-content: start;
+    }
+
+    .metric-card {
+      padding: 18px 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(245,239,228,0.76));
+      border: 1px solid rgba(39, 65, 50, 0.08);
+    }
+
+    .metric-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .metric-value {
+      font-size: 1.42rem;
+      font-weight: 800;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.15;
+    }
+
+    .metric-note {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .metric-good { color: var(--green); }
+    .metric-warn { color: var(--amber); }
+    .metric-bad  { color: var(--red); }
+
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 28px;
+    }
+
+    .quick-links a {
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.50);
+      color: var(--green-deep);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .viewer-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(310px, 0.78fr);
+      gap: 22px;
+      align-items: start;
+      margin-bottom: 30px;
+    }
+
+    .viewer-card {
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(255,250,241,0.86), rgba(246,239,229,0.95));
+    }
+
+    .viewer-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-end;
+      margin-bottom: 14px;
+    }
+
+    .viewer-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      max-width: 58ch;
+    }
+
+    .viewer-badge {
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(201, 122, 49, 0.12);
+      color: #88511e;
+      border: 1px solid rgba(201, 122, 49, 0.24);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .canvas-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top, rgba(74, 240, 112, 0.12), transparent 26%),
+        radial-gradient(circle at bottom, rgba(240, 160, 32, 0.10), transparent 18%),
+        var(--viewer);
+      border: 1px solid rgba(74, 180, 100, 0.18);
+    }
+
+    #c {
+      display: block;
+      width: 100%;
+      height: 610px;
+      cursor: grab;
+    }
+
+    #c:active { cursor: grabbing; }
+
+    .canvas-caption {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(7, 16, 13, 0.70);
+      color: #d7efe0;
+      font-size: 0.87rem;
+      max-width: 34ch;
+      border: 1px solid rgba(74, 180, 100, 0.18);
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .side-card {
+      padding: 20px 20px 18px;
+    }
+
+    .side-card h3 {
+      font-size: 1.34rem;
+      margin-bottom: 10px;
+    }
+
+    .side-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .legend-item,
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      margin: 8px 0;
+      color: var(--ink);
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .check-grid {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .check-row input {
+      accent-color: var(--green);
+      transform: translateY(1px);
+    }
+
+    .mini-metric {
+      padding: 12px 0;
+      border-bottom: 1px dashed rgba(39, 65, 50, 0.12);
+    }
+
+    .mini-metric:last-child { border-bottom: 0; }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .mini-value {
+      font-family: var(--mono);
+      font-size: 0.98rem;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    section {
+      margin-top: 24px;
+      scroll-margin-top: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .section-kicker {
+      color: var(--green-deep);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+    }
+
+    .section-intro {
+      max-width: 70ch;
+      color: var(--muted);
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .section-card,
+    .note-card {
+      padding: 24px;
+    }
+
+    .section-card h3,
+    .note-card h3 {
+      font-size: 1.36rem;
+      margin-bottom: 10px;
+    }
+
+    .section-card p,
+    .note-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .formula {
+      margin: 14px 0;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(24, 49, 40, 0.96), rgba(14, 31, 24, 0.98));
+      color: #e7f7ee;
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      overflow-x: auto;
+      border: 1px solid rgba(74, 180, 100, 0.20);
+    }
+
+    .formula .accent { color: #8df0b0; }
+    .formula .warm { color: #ffc37a; }
+    .formula .cyan { color: #8bd9ff; }
+
+    .formula-inline {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 10px;
+      background: rgba(61, 139, 97, 0.10);
+      color: var(--green-deep);
+      font-family: var(--mono);
+      font-size: 0.93rem;
+    }
+
+    .process-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .process-item {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.56);
+      border: 1px solid rgba(39, 65, 50, 0.08);
+    }
+
+    .process-step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      background: rgba(61, 139, 97, 0.12);
+      color: var(--green-deep);
+      font-weight: 800;
+    }
+
+    .process-item h4 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+
+    .process-item p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    details.detail {
+      border-radius: 20px;
+      border: 1px solid rgba(39, 65, 50, 0.10);
+      background: rgba(255,255,255,0.56);
+      overflow: hidden;
+    }
+
+    details.detail + details.detail { margin-top: 14px; }
+
+    details.detail summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 18px 22px;
+      font-weight: 800;
+      color: var(--ink);
+      position: relative;
+      font-size: 1.02rem;
+    }
+
+    details.detail summary::-webkit-details-marker { display: none; }
+
+    details.detail summary::after {
+      content: "+";
+      position: absolute;
+      right: 20px;
+      top: 14px;
+      font-size: 1.4rem;
+      color: var(--green-deep);
+    }
+
+    details.detail[open] summary::after { content: "−"; }
+
+    .detail-body {
+      padding: 0 22px 20px;
+      color: var(--muted);
+    }
+
+    .detail-body p:last-child { margin-bottom: 0; }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .compare-card {
+      padding: 20px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.60);
+      border: 1px solid rgba(39, 65, 50, 0.08);
+    }
+
+    .compare-card.bad {
+      background: linear-gradient(180deg, rgba(190, 91, 69, 0.08), rgba(255,255,255,0.60));
+    }
+
+    .compare-card.good {
+      background: linear-gradient(180deg, rgba(61, 139, 97, 0.08), rgba(255,255,255,0.60));
+    }
+
+    .compare-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 1.22rem;
+    }
+
+    .compare-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .big-number {
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ratio-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .ratio-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.60);
+      border: 1px solid rgba(39, 65, 50, 0.08);
+      text-align: center;
+    }
+
+    .ratio-card strong {
+      display: block;
+      font-size: 1.34rem;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ratio-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+
+    .footer-note {
+      margin-top: 26px;
+      padding: 20px 22px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(61, 139, 97, 0.12), rgba(45, 140, 140, 0.10));
+      border: 1px solid rgba(61, 139, 97, 0.16);
+      color: var(--green-deep);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1080px) {
+      .hero,
+      .viewer-layout,
+      .grid-2,
+      .grid-3,
+      .compare-grid,
+      .ratio-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: 18px 14px 64px; }
+      .hero-copy,
+      .hero-metrics,
+      .viewer-card,
+      .side-card,
+      .section-card,
+      .note-card {
+        border-radius: 20px;
+      }
+
+      .hero-copy { padding: 24px 20px; }
+      .hero-metrics { grid-template-columns: 1fr; }
+      #c { height: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Versión v1 explicada paso a paso</div>
+        <h1>Tortuga v1: cómo las integrales triples encuentran el centro de masa</h1>
+        <p class="lead">
+          Esta página no solo muestra la tortuga: explica <strong>qué región 3D se integra</strong>,
+          <strong>qué significan los momentos</strong>, <strong>cómo se obtiene el centro de masa</strong>
+          y <strong>por qué ese centro de masa decide si la tortuga se equilibra o se va hacia la cabeza</strong>.
+        </p>
+        <p class="lead">
+          La idea central es muy simple: si la proyección vertical del centro de masa cae exactamente sobre el punto
+          de apoyo, la pieza no genera torque lateral. Si cae corrida, la gravedad crea giro y la tortuga se vuelca.
+        </p>
+        <div class="hero-tags">
+          <span class="hero-tag">Región 3D + función característica</span>
+          <span class="hero-tag">Triple integral de volumen y momentos</span>
+          <span class="hero-tag">Centro de masa en mm</span>
+          <span class="hero-tag">Relación con el punto de apoyo</span>
+        </div>
+      </div>
+
+      <aside class="hero-metrics">
+        <div class="metric-card">
+          <span class="metric-label">Centro de masa v1</span>
+          <div class="metric-value" id="hero-cm">(...)</div>
+          <div class="metric-note">Coordenadas del CM en la geometría original.</div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Apoyo real</span>
+          <div class="metric-value" id="hero-support-real">(...)</div>
+          <div class="metric-note">Ápice del domo pequeño `SHELL2`.</div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Desalineación horizontal</span>
+          <div class="metric-value metric-bad" id="hero-dx">(...)</div>
+          <div class="metric-note">Si esta distancia no es casi cero, aparece torque lateral.</div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Altura del CM sobre el apoyo</span>
+          <div class="metric-value metric-good" id="hero-zcm">(...)</div>
+          <div class="metric-note">Debe ser menor que la curvatura efectiva `R_eff`.</div>
+        </div>
+      </aside>
+    </header>
+
+    <nav class="quick-links">
+      <a href="#visor">Ver la geometría</a>
+      <a href="#modelo">Definir la región T</a>
+      <a href="#integrales">Leer las integrales triples</a>
+      <a href="#montecarlo">Ver cómo se aproxima numéricamente</a>
+      <a href="#equilibrio">Relacionarlo con el apoyo</a>
+      <a href="#conclusion">Conclusión rápida</a>
+    </nav>
+
+    <section id="visor" class="viewer-layout">
+      <div class="viewer-card">
+        <div class="viewer-head">
+          <div>
+            <span class="section-kicker">Visor 3D</span>
+            <h2>Geometría real de la v1 y sus puntos clave</h2>
+            <p>
+              El punto verde es el centro de masa calculado. El punto naranja es el apoyo real del domo pequeño.
+              El rojo es el apoyo que se asumía al mirar solo el caparazón grande. La línea verde baja verticalmente
+              para mostrar dónde “cae” el peso.
+            </p>
+          </div>
+          <div class="viewer-badge">Arrastra para rotar · Scroll para zoom</div>
+        </div>
+
+        <div class="canvas-shell">
+          <canvas id="c"></canvas>
+          <div class="canvas-caption">
+            Lo importante no es solo la forma. Lo importante es si la vertical del CM pasa por el apoyo.
+            Si pasa adelantada, la tortuga gira hacia la cabeza.
+          </div>
+        </div>
+      </div>
+
+      <div class="side-stack">
+        <aside class="side-card">
+          <span class="section-kicker">Lectura rápida</span>
+          <h3>Qué estás viendo</h3>
+          <div class="legend-item"><span class="dot" style="background:#246b3a"></span>Caparazón grande `SHELL1`</div>
+          <div class="legend-item"><span class="dot" style="background:#3ec070"></span>Domo pequeño `SHELL2`</div>
+          <div class="legend-item"><span class="dot" style="background:#45b86a"></span>Cabeza, cuello y hocico</div>
+          <div class="legend-item"><span class="dot" style="background:#2d9050"></span>Aletas, patas y cola</div>
+          <div class="legend-item"><span class="dot" style="background:#4af070"></span>Centro de masa</div>
+          <div class="legend-item"><span class="dot" style="background:#f0a020"></span>Apoyo real</div>
+          <div class="legend-item"><span class="dot" style="background:#e04040"></span>Apoyo supuesto</div>
+        </aside>
+
+        <aside class="side-card">
+          <span class="section-kicker">Controles</span>
+          <h3>Ocultar o mostrar capas</h3>
+          <div class="check-grid">
+            <label class="check-row"><input type="checkbox" id="tgl-shell1" checked />Caparazón grande `SHELL1`</label>
+            <label class="check-row"><input type="checkbox" id="tgl-shell2" checked />Domo pequeño `SHELL2`</label>
+            <label class="check-row"><input type="checkbox" id="tgl-limbs" checked />Cabeza, patas y cola</label>
+            <label class="check-row"><input type="checkbox" id="tgl-cm" checked />Centro de masa y plomada</label>
+            <label class="check-row"><input type="checkbox" id="tgl-real" checked />Apoyo real</label>
+            <label class="check-row"><input type="checkbox" id="tgl-assumed" checked />Apoyo supuesto</label>
+            <label class="check-row"><input type="checkbox" id="tgl-table" checked />Mesa y rejilla</label>
+            <label class="check-row"><input type="checkbox" id="tgl-wire" />Modo wireframe</label>
+          </div>
+        </aside>
+
+        <aside class="side-card">
+          <span class="section-kicker">Números clave</span>
+          <h3>Resumen físico de la v1</h3>
+          <div class="mini-metric">
+            <span class="mini-label">CM original</span>
+            <span class="mini-value" id="mini-cm"></span>
+          </div>
+          <div class="mini-metric">
+            <span class="mini-label">Apoyo real `SHELL2`</span>
+            <span class="mini-value" id="mini-real"></span>
+          </div>
+          <div class="mini-metric">
+            <span class="mini-label">Apoyo supuesto `SHELL1`</span>
+            <span class="mini-value" id="mini-assumed"></span>
+          </div>
+          <div class="mini-metric">
+            <span class="mini-label">Δx respecto al apoyo real</span>
+            <span class="mini-value" id="mini-dx-real"></span>
+          </div>
+          <div class="mini-metric">
+            <span class="mini-label">z_CM sobre el apoyo</span>
+            <span class="mini-value" id="mini-zcm"></span>
+          </div>
+          <div class="mini-metric">
+            <span class="mini-label">Curvatura efectiva</span>
+            <span class="mini-value" id="mini-reff"></span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="modelo">
+      <div class="section-header">
+        <div>
+          <span class="section-kicker">Paso 1</span>
+          <h2>Primero definimos qué volumen exacto estamos integrando</h2>
+        </div>
+        <p class="section-intro">
+          La integral triple no se hace sobre “un dibujo”. Se hace sobre una región 3D bien definida.
+          Esa región es toda la tortuga: caparazón, hueco interno, cuello, cabeza, patas, aletas y cola.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <article class="section-card">
+          <h3>La región total se llama <span class="formula-inline">T</span></h3>
+          <p>
+            La v1 se modela como una unión de primitivas suaves. El caparazón no es una sola esfera:
+            tiene un elipsoide grande, un domo superior, y luego se le resta un vacío interno.
+            Después se agregan cápsulas y elipsoides para el resto del cuerpo.
+          </p>
+          <div class="formula">
+            <span class="accent">T</span> =
+            ((<span class="warm">SHELL1</span> ∪ <span class="warm">SHELL2</span>) \ <span class="cyan">HUECO</span>)
+            ∪ <span class="accent">CUELLO</span>
+            ∪ <span class="accent">CABEZA</span>
+            ∪ <span class="accent">HOCICO</span>
+            ∪ <span class="accent">ALETAS</span>
+            ∪ <span class="accent">PATAS</span>
+            ∪ <span class="accent">COLA</span>
+          </div>
+          <p>
+            Esa expresión significa: primero construimos el cuerpo principal, luego le quitamos el hueco
+            interior, y finalmente unimos todas las demás piezas.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <h3>Cómo reconoce el código si un punto está dentro</h3>
+          <p>
+            El script usa una <strong>función característica</strong>. A cada punto del espacio le pregunta:
+            “¿estás dentro de la tortuga o estás fuera?”.
+          </p>
+          <div class="formula">
+            χ<sub>T</sub>(x,y,z) =
+            <br />&nbsp;&nbsp;1 &nbsp; si (x,y,z) está dentro de <span class="accent">T</span>
+            <br />&nbsp;&nbsp;0 &nbsp; si (x,y,z) está fuera de <span class="accent">T</span>
+          </div>
+          <p>
+            Esto es muy útil porque evita tener que escribir una integral distinta para cada trozo del modelo.
+            En vez de eso, integramos sobre una caja grande y dejamos que <span class="formula-inline">χ<sub>T</sub></span>
+            decida qué puntos cuentan y cuáles no.
+          </p>
+        </article>
+      </div>
+
+      <div class="process-list">
+        <div class="process-item">
+          <div class="process-step">1</div>
+          <h4>Elipsoide</h4>
+          <p>
+            Un punto pertenece a un elipsoide si su versión normalizada cumple
+            <span class="formula-inline">((x-cx)/ax)² + ((y-cy)/ay)² + ((z-cz)/az)² ≤ 1</span>.
+          </p>
+        </div>
+        <div class="process-item">
+          <div class="process-step">2</div>
+          <h4>Cápsula</h4>
+          <p>
+            Una cápsula se comprueba midiendo la distancia del punto al segmento central. Si esa distancia
+            es menor que el radio, el punto está dentro.
+          </p>
+        </div>
+        <div class="process-item">
+          <div class="process-step">3</div>
+          <h4>Hueco interior</h4>
+          <p>
+            El caparazón no es macizo. Entonces un punto solo cuenta si está dentro del caparazón exterior
+            <strong>y al mismo tiempo</strong> fuera del elipsoide interior que se sustrae.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="integrales">
+      <div class="section-header">
+        <div>
+          <span class="section-kicker">Paso 2</span>
+          <h2>Ahora sí: las integrales triples que producen el centro de masa</h2>
+        </div>
+        <p class="section-intro">
+          El centro de masa sale de tres ideas: primero calcular el volumen, luego calcular cuánto “momento”
+          tiene ese volumen respecto a cada eje, y al final dividir momentos entre volumen.
+        </p>
+      </div>
+
+      <details class="detail" open>
+        <summary>Volumen total de la tortuga</summary>
+        <div class="detail-body">
+          <p>
+            El volumen total se obtiene sumando todos los diferenciales de volumen que sí pertenecen a la tortuga.
+            La función característica deja esto escrito de forma compacta:
+          </p>
+          <div class="formula">
+            <span class="accent">V</span> = ∭<sub>B</sub> χ<sub>T</sub>(x,y,z) dV
+          </div>
+          <p>
+            La región <span class="formula-inline">B</span> es una caja que contiene a toda la tortuga. Dentro de esa caja,
+            cada diferencial cuenta como <span class="formula-inline">1</span> si está dentro del sólido y como
+            <span class="formula-inline">0</span> si está fuera. Por eso la integral “recupera” solo el volumen real.
+          </p>
+        </div>
+      </details>
+
+      <details class="detail" open>
+        <summary>Momentos respecto a los ejes x, y y z</summary>
+        <div class="detail-body">
+          <p>
+            El volumen por sí solo no dice dónde está la masa. Para eso necesitamos medir cuánto pesa cada diferencial
+            según su distancia a los planos coordenados. Esos son los momentos:
+          </p>
+          <div class="formula">
+            <span class="warm">M<sub>x</sub></span> = ∭<sub>B</sub> x · χ<sub>T</sub>(x,y,z) dV
+            <br />
+            <span class="warm">M<sub>y</sub></span> = ∭<sub>B</sub> y · χ<sub>T</sub>(x,y,z) dV
+            <br />
+            <span class="warm">M<sub>z</sub></span> = ∭<sub>B</sub> z · χ<sub>T</sub>(x,y,z) dV
+          </div>
+          <p>
+            Si una parte de la tortuga está muy adelantada en <span class="formula-inline">x</span>, aporta mucho a
+            <span class="formula-inline">M<sub>x</sub></span>. Si una parte está más alta, aporta más a
+            <span class="formula-inline">M<sub>z</sub></span>.
+          </p>
+        </div>
+      </details>
+
+      <details class="detail" open>
+        <summary>Definición del centro de masa</summary>
+        <div class="detail-body">
+          <p>
+            Una vez tienes el volumen y los momentos, el centro de masa es simplemente el promedio ponderado:
+          </p>
+          <div class="formula">
+            x̄ = M<sub>x</sub> / V
+            <br />
+            ȳ = M<sub>y</sub> / V
+            <br />
+            z̄ = M<sub>z</sub> / V
+          </div>
+          <p>
+            En palabras: el centro de masa es el punto donde quedaría “concentrada” toda la masa si quisiéramos
+            reemplazar la tortuga por un solo punto equivalente.
+          </p>
+        </div>
+      </details>
+
+      <div class="grid-2" style="margin-top:18px;">
+        <article class="note-card">
+          <h3>Lectura física muy fácil</h3>
+          <p>
+            Si agregas masa hacia la cabeza, <span class="formula-inline">x̄</span> se mueve hacia la cabeza.
+            Si agregas masa arriba del caparazón, <span class="formula-inline">z̄</span> sube.
+            Si el modelo es casi simétrico izquierda-derecha, entonces <span class="formula-inline">ȳ ≈ 0</span>.
+          </p>
+          <p>
+            En esta v1, el problema principal no es la simetría lateral. El problema es que
+            <strong>el CM queda adelantado con respecto al apoyo real</strong>.
+          </p>
+        </article>
+
+        <article class="note-card">
+          <h3>Qué unidades usa todo esto</h3>
+          <p>
+            El modelo se construye primero en unidades SCAD. Luego se multiplica por
+            <span class="formula-inline">11 mm por unidad</span>.
+          </p>
+          <div class="formula">
+            X<sub>mm</sub> = 11 · X<sub>SCAD</sub>
+            <br />
+            Y<sub>mm</sub> = 11 · Y<sub>SCAD</sub>
+            <br />
+            Z<sub>mm</sub> = 11 · Z<sub>SCAD</sub>
+          </div>
+          <p>
+            Por eso el centro de masa calculado como <span class="formula-inline">(-2.294703, 0, 1.0459)</span> en SCAD
+            aparece como aproximadamente <span class="formula-inline" id="cm-inline"></span> en milímetros.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="montecarlo">
+      <div class="section-header">
+        <div>
+          <span class="section-kicker">Paso 3</span>
+          <h2>Cómo se aproxima la integral triple en el código</h2>
+        </div>
+        <p class="section-intro">
+          La integral es totalmente válida en forma exacta, pero la geometría de la tortuga es una unión y diferencia
+          de muchas piezas curvas. Por eso el archivo <code>calculo_cm_montecarlo.py</code> la aproxima con muestreo aleatorio.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <article class="section-card">
+          <h3>La caja de muestreo</h3>
+          <p>
+            En vez de disparar puntos por todo el espacio, se encierra a la tortuga en una caja
+            <span class="formula-inline">B</span> y solo se muestrea dentro de esa caja.
+          </p>
+          <div class="formula">
+            B = [−5.35, 3.55] × [−3.10, 3.10] × [0.05, 2.10] &nbsp; unidades SCAD
+          </div>
+          <p>
+            Cada punto aleatorio representa un pequeño “voto” dentro de la integral. Si cae dentro de la tortuga,
+            suma al volumen y también suma a los momentos.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <h3>Fórmulas numéricas que usa el script</h3>
+          <p>
+            Si se muestrean <span class="formula-inline">N</span> puntos, y
+            <span class="formula-inline">n<sub>in</sub></span> caen dentro de la tortuga, el script usa:
+          </p>
+          <div class="formula">
+            V ≈ V<sub>B</sub> · n<sub>in</sub> / N
+            <br />
+            M<sub>x</sub> ≈ V<sub>B</sub> · Σ(x<sub>i</sub> χ<sub>i</sub>) / N
+            <br />
+            M<sub>y</sub> ≈ V<sub>B</sub> · Σ(y<sub>i</sub> χ<sub>i</sub>) / N
+            <br />
+            M<sub>z</sub> ≈ V<sub>B</sub> · Σ(z<sub>i</sub> χ<sub>i</sub>) / N
+          </div>
+          <p>
+            Después, igual que antes, divide cada momento entre el volumen para obtener
+            <span class="formula-inline">x̄, ȳ, z̄</span>.
+          </p>
+        </article>
+      </div>
+
+      <article class="section-card" style="margin-top:18px;">
+        <h3>Pseudocódigo del proceso completo</h3>
+        <div class="formula">
+          generar N puntos aleatorios dentro de B
+          <br />
+          para cada punto (x<sub>i</sub>, y<sub>i</sub>, z<sub>i</sub>):
+          <br />
+          &nbsp;&nbsp;si χ<sub>T</sub>(x<sub>i</sub>, y<sub>i</sub>, z<sub>i</sub>) = 1:
+          <br />
+          &nbsp;&nbsp;&nbsp;&nbsp;sumar 1 al conteo de volumen
+          <br />
+          &nbsp;&nbsp;&nbsp;&nbsp;sumar x<sub>i</sub>, y<sub>i</sub>, z<sub>i</sub> a los momentos
+          <br />
+          al final:
+          <br />
+          &nbsp;&nbsp;V, M<sub>x</sub>, M<sub>y</sub>, M<sub>z</sub> → x̄, ȳ, z̄
+        </div>
+        <p>
+          Esto es exactamente lo que hace el script: preguntar “¿el punto está dentro?” y usar esa respuesta
+          para construir numéricamente la integral triple.
+        </p>
+      </article>
+    </section>
+
+    <section id="equilibrio">
+      <div class="section-header">
+        <div>
+          <span class="section-kicker">Paso 4</span>
+          <h2>Cómo se conecta el centro de masa con el punto de apoyo</h2>
+        </div>
+        <p class="section-intro">
+          Aquí ya no estamos integrando. Aquí interpretamos el resultado. El equilibrio depende de comparar la vertical
+          del centro de masa con el lugar exacto donde la tortuga toca la superficie.
+        </p>
+      </div>
+
+      <div class="compare-grid">
+        <article class="compare-card bad">
+          <h3><span class="dot" style="background:#f0a020"></span>Apoyo real del modelo v1</h3>
+          <p>
+            El apoyo verdadero no está en el centro del caparazón grande. Está en el ápice del domo pequeño `SHELL2`.
+          </p>
+          <div class="big-number" id="real-support-big">x = ... mm</div>
+          <p>
+            Cuando comparamos ese apoyo con el centro de masa, obtenemos una desalineación horizontal de
+            <strong id="dx-real-strong">...</strong>. Eso significa que la fuerza peso no cae justo sobre el contacto.
+          </p>
+        </article>
+
+        <article class="compare-card good">
+          <h3><span class="dot" style="background:#e04040"></span>Apoyo supuesto al mirar solo `SHELL1`</h3>
+          <p>
+            Si alguien mira solo el caparazón grande, pensaría que el apoyo está en otro sitio.
+            Ese error hace que el diagnóstico sea demasiado optimista.
+          </p>
+          <div class="big-number" id="assumed-support-big">x = ... mm</div>
+          <p>
+            Contra ese apoyo, el corrimiento es menor, pero sigue existiendo. Por eso era importante identificar
+            cuál domo toca realmente la mesa.
+          </p>
+        </article>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px;">
+        <article class="section-card">
+          <h3>Condición horizontal: la vertical del CM debe pasar por el apoyo</h3>
+          <p>
+            En un apoyo casi puntual, el criterio horizontal es muy simple:
+          </p>
+          <div class="formula">
+            Δx = x<sub>CM</sub> − x<sub>apoyo</sub>
+            <br />
+            si Δx = 0 → no hay torque lateral
+            <br />
+            si Δx ≠ 0 → aparece un giro
+          </div>
+          <p>
+            En esta v1 sale <span class="formula-inline" id="dx-real-inline"></span>, así que el peso cae adelantado
+            respecto al apoyo real. La consecuencia es un giro hacia la cabeza.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <h3>Condición vertical: la altura del CM debe ser menor que la curvatura</h3>
+          <p>
+            La curvatura del domo también importa. Para el domo pequeño:
+          </p>
+          <div class="formula">
+            R<sub>eff</sub> = a² / c
+          </div>
+          <p>
+            Aquí <span class="formula-inline">R<sub>eff</sub> ≈ <span id="reff-inline"></span></span> y
+            <span class="formula-inline">z<sub>CM</sub> sobre apoyo ≈ <span id="zcm-inline"></span></span>.
+            Esa parte sí da bien: el problema dominante no es la altura, sino la desalineación horizontal.
+          </p>
+        </article>
+      </div>
+
+      <div class="ratio-grid">
+        <div class="ratio-card">
+          <strong id="ratio-cm"></strong>
+          <span>Centro de masa</span>
+        </div>
+        <div class="ratio-card">
+          <strong id="ratio-reff"></strong>
+          <span>Curvatura efectiva</span>
+        </div>
+        <div class="ratio-card">
+          <strong id="ratio-margin"></strong>
+          <span>Margen vertical</span>
+        </div>
+      </div>
+
+      <article class="note-card" style="margin-top:18px;">
+        <h3>La lectura física más importante de toda la página</h3>
+        <p>
+          El centro de masa no “decide” solo. Lo que decide el equilibrio es la combinación de dos cosas:
+        </p>
+        <div class="process-list">
+          <div class="process-item">
+            <div class="process-step">A</div>
+            <h4>Dónde cae la vertical del peso</h4>
+            <p>Si la vertical del CM pasa por el apoyo, no hay torque lateral inmediato.</p>
+          </div>
+          <div class="process-item">
+            <div class="process-step">B</div>
+            <h4>Qué tan curvo es el apoyo</h4>
+            <p>Si el apoyo es un domo convexo y el CM está lo bastante bajo, el sistema recupera el equilibrio.</p>
+          </div>
+          <div class="process-item">
+            <div class="process-step">C</div>
+            <h4>Qué falla en v1</h4>
+            <p>La parte vertical sí ayuda, pero la vertical del peso cae corrida hacia adelante, así que la tortuga se va hacia la cabeza.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="conclusion">
+      <div class="section-header">
+        <div>
+          <span class="section-kicker">Cierre</span>
+          <h2>Conclusión fácil de recordar</h2>
+        </div>
+        <p class="section-intro">
+          Si mañana tienes que explicarlo en clase o en la entrega, puedes resumirlo en cuatro frases.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <article class="section-card">
+          <h3>Resumen matemático</h3>
+          <p>
+            La tortuga v1 se modela como una región 3D compuesta por elipsoides y cápsulas. Sobre esa región se define
+            una función característica <span class="formula-inline">χ<sub>T</sub></span>. Con ella se calculan volumen y momentos
+            mediante integrales triples, y después se obtiene el centro de masa con
+            <span class="formula-inline">x̄ = M<sub>x</sub>/V</span>,
+            <span class="formula-inline">ȳ = M<sub>y</sub>/V</span>,
+            <span class="formula-inline">z̄ = M<sub>z</sub>/V</span>.
+          </p>
+        </article>
+
+        <article class="section-card">
+          <h3>Resumen físico</h3>
+          <p>
+            El apoyo real de la v1 está en el domo pequeño `SHELL2`. El centro de masa queda adelantado respecto a ese punto,
+            así que la vertical del peso no pasa por el apoyo. Por eso, aunque la altura del CM es compatible con la curvatura
+            del domo, aparece un torque horizontal y la tortuga tiende a caer hacia la cabeza.
+          </p>
+        </article>
+      </div>
+
+      <div class="footer-note">
+        Idea clave para exponer: <strong>la integral triple encuentra el centro de masa</strong>, y luego la física compara
+        ese centro de masa con el <strong>punto real de apoyo</strong>. El equilibrio no depende de “verse centrada”, sino de
+        que la vertical del peso y el apoyo coincidan geométricamente.
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    (function () {
+      const S = 11.0;
+      const Z_FLIP = (1.46 + 0.70) * S;
+
+      const GEOM = {
+        shell1: { c: [-2.40, 0, 1.05], a: [1.95, 1.90, 0.95] },
+        shell2: { c: [-2.52, 0, 1.46], a: [1.42, 1.46, 0.70] },
+        neck:   { p0: [-1.95, 0, 0.78], p1: [-0.58, 0, 0.54], r: 0.28 },
+        head:   { c: [-0.05, 0, 0.48], a: [0.74, 0.48, 0.40] },
+        muzzle: { p0: [ 0.22, 0, 0.30], p1: [ 0.42, 0, 0.33], r: 0.12 },
+        armL:   { p0: [-2.18,  0.72, 1.00], p1: [ 0.95,  2.35, 0.76], r: 0.24 },
+        armR:   { p0: [-2.18, -0.72, 1.00], p1: [ 0.95, -2.35, 0.76], r: 0.24 },
+        legL:   { p0: [-3.28,  0.82, 0.94], p1: [-4.88,  1.78, 0.60], r: 0.20 },
+        legR:   { p0: [-3.28, -0.82, 0.94], p1: [-4.88, -1.78, 0.60], r: 0.20 },
+        tail:   { p0: [-4.18, 0, 0.72], p1: [-5.30, 0, 0.58], r: 0.12 }
+      };
+
+      const CM_SCAD = [-2.294703, 0.0, 1.0459];
+
+      const cmMm = {
+        x: CM_SCAD[0] * S,
+        y: CM_SCAD[1] * S,
+        z: CM_SCAD[2] * S
+      };
+
+      const supportRealMm = {
+        x: GEOM.shell2.c[0] * S,
+        y: GEOM.shell2.c[1] * S,
+        z: 0
+      };
+
+      const supportAssumedMm = {
+        x: GEOM.shell1.c[0] * S,
+        y: GEOM.shell1.c[1] * S,
+        z: 0
+      };
+
+      const deltaRealX = cmMm.x - supportRealMm.x;
+      const deltaAssumedX = cmMm.x - supportAssumedMm.x;
+      const deltaY = cmMm.y - supportRealMm.y;
+      const zCmOnSupport = ((GEOM.shell2.c[2] + GEOM.shell2.a[2]) - CM_SCAD[2]) * S;
+      const rEff = Math.pow(GEOM.shell2.a[0] * S, 2) / (GEOM.shell2.a[2] * S);
+      const margin = rEff - zCmOnSupport;
+
+      function fmt(n, digits) {
+        return Number(n).toFixed(digits);
+      }
+
+      function fill(id, value) {
+        const node = document.getElementById(id);
+        if (node) node.textContent = value;
+      }
+
+      fill("hero-cm", `(${fmt(cmMm.x, 2)}, ${fmt(cmMm.y, 2)}, ${fmt(cmMm.z, 2)}) mm`);
+      fill("hero-support-real", `x = ${fmt(supportRealMm.x, 2)} mm`);
+      fill("hero-dx", `${fmt(deltaRealX, 2)} mm`);
+      fill("hero-zcm", `${fmt(zCmOnSupport, 2)} mm`);
+
+      fill("mini-cm", `(${fmt(cmMm.x, 2)}, ${fmt(cmMm.y, 2)}, ${fmt(cmMm.z, 2)}) mm`);
+      fill("mini-real", `(${fmt(supportRealMm.x, 2)}, ${fmt(supportRealMm.y, 2)}, 0.00) mm`);
+      fill("mini-assumed", `(${fmt(supportAssumedMm.x, 2)}, ${fmt(supportAssumedMm.y, 2)}, 0.00) mm`);
+      fill("mini-dx-real", `Δx = ${fmt(deltaRealX, 2)} mm ; Δy = ${fmt(deltaY, 2)} mm`);
+      fill("mini-zcm", `${fmt(zCmOnSupport, 2)} mm`);
+      fill("mini-reff", `${fmt(rEff, 1)} mm`);
+
+      fill("cm-inline", `(${fmt(cmMm.x, 2)}, ${fmt(cmMm.y, 2)}, ${fmt(cmMm.z, 2)}) mm`);
+      fill("real-support-big", `x = ${fmt(supportRealMm.x, 2)} mm`);
+      fill("assumed-support-big", `x = ${fmt(supportAssumedMm.x, 2)} mm`);
+      fill("dx-real-strong", `${fmt(deltaRealX, 2)} mm`);
+      fill("dx-real-inline", `Δx = ${fmt(deltaRealX, 2)} mm`);
+      fill("reff-inline", `${fmt(rEff, 1)} mm`);
+      fill("zcm-inline", `${fmt(zCmOnSupport, 2)} mm`);
+
+      fill("ratio-cm", `${fmt(zCmOnSupport, 2)} mm`);
+      fill("ratio-reff", `${fmt(rEff, 1)} mm`);
+      fill("ratio-margin", `${fmt(margin, 1)} mm`);
+
+      const canvas = document.getElementById("c");
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x0a1512, 1);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 2000);
+      camera.up.set(0, 0, 1);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.58));
+      const key = new THREE.DirectionalLight(0xffffff, 0.88);
+      key.position.set(60, 40, 85);
+      scene.add(key);
+      const fillLight = new THREE.DirectionalLight(0x88ccaa, 0.38);
+      fillLight.position.set(-60, -40, 35);
+      scene.add(fillLight);
+
+      const materials = {
+        shell1: new THREE.MeshStandardMaterial({ color: 0x246b3a, roughness: 0.58, transparent: true, opacity: 0.90 }),
+        shell2: new THREE.MeshStandardMaterial({ color: 0x3ec070, roughness: 0.52, transparent: true, opacity: 0.98 }),
+        head: new THREE.MeshStandardMaterial({ color: 0x45b86a, roughness: 0.66 }),
+        limb: new THREE.MeshStandardMaterial({ color: 0x2d9050, roughness: 0.68 }),
+        cm: new THREE.MeshStandardMaterial({ color: 0x4af070, emissive: 0x1a5030, emissiveIntensity: 0.72 }),
+        real: new THREE.MeshStandardMaterial({ color: 0xf0a020, emissive: 0x6a3a00, emissiveIntensity: 0.72 }),
+        assumed: new THREE.MeshStandardMaterial({ color: 0xe04040, emissive: 0x5a1010, emissiveIntensity: 0.72 }),
+        table: new THREE.MeshStandardMaterial({ color: 0x14211a, roughness: 0.92, side: THREE.DoubleSide })
+      };
+
+      const gShell1 = new THREE.Group();
+      const gShell2 = new THREE.Group();
+      const gLimbs = new THREE.Group();
+      const gCM = new THREE.Group();
+      const gReal = new THREE.Group();
+      const gAssumed = new THREE.Group();
+      const gTable = new THREE.Group();
+
+      function scadToPrint(x, y, z) {
+        return new THREE.Vector3(x * S, y * S, Z_FLIP - z * S);
+      }
+
+      function addEllipsoid(group, c, a, mat) {
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), mat);
+        mesh.position.copy(scadToPrint(c[0], c[1], c[2]));
+        mesh.scale.set(a[0] * S, a[1] * S, a[2] * S);
+        group.add(mesh);
+        return mesh;
+      }
+
+      function addCapsule(group, p0, p1, r, mat) {
+        const P0 = scadToPrint(p0[0], p0[1], p0[2]);
+        const P1 = scadToPrint(p1[0], p1[1], p1[2]);
+        const dir = new THREE.Vector3().subVectors(P1, P0);
+        const len = dir.length();
+        const rr = r * S;
+
+        const cyl = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, len, 24, 1, true), mat);
+        const mid = new THREE.Vector3().addVectors(P0, P1).multiplyScalar(0.5);
+        cyl.position.copy(mid);
+        cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+        group.add(cyl);
+
+        const s1 = new THREE.Mesh(new THREE.SphereGeometry(rr, 24, 16), mat);
+        s1.position.copy(P0);
+        group.add(s1);
+
+        const s2 = new THREE.Mesh(new THREE.SphereGeometry(rr, 24, 16), mat);
+        s2.position.copy(P1);
+        group.add(s2);
+      }
+
+      addEllipsoid(gShell1, GEOM.shell1.c, GEOM.shell1.a, materials.shell1);
+      addEllipsoid(gShell2, GEOM.shell2.c, GEOM.shell2.a, materials.shell2);
+
+      addCapsule(gLimbs, GEOM.neck.p0, GEOM.neck.p1, GEOM.neck.r, materials.head);
+      addEllipsoid(gLimbs, GEOM.head.c, GEOM.head.a, materials.head);
+      addCapsule(gLimbs, GEOM.muzzle.p0, GEOM.muzzle.p1, GEOM.muzzle.r, materials.head);
+      addCapsule(gLimbs, GEOM.armL.p0, GEOM.armL.p1, GEOM.armL.r, materials.limb);
+      addCapsule(gLimbs, GEOM.armR.p0, GEOM.armR.p1, GEOM.armR.r, materials.limb);
+      addCapsule(gLimbs, GEOM.legL.p0, GEOM.legL.p1, GEOM.legL.r, materials.limb);
+      addCapsule(gLimbs, GEOM.legR.p0, GEOM.legR.p1, GEOM.legR.r, materials.limb);
+      addCapsule(gLimbs, GEOM.tail.p0, GEOM.tail.p1, GEOM.tail.r, materials.limb);
+
+      const cmPos = scadToPrint(CM_SCAD[0], CM_SCAD[1], CM_SCAD[2]);
+      const cmSphere = new THREE.Mesh(new THREE.SphereGeometry(1.9, 24, 16), materials.cm);
+      cmSphere.position.copy(cmPos);
+      gCM.add(cmSphere);
+
+      const plumbGeo = new THREE.BufferGeometry().setFromPoints([
+        cmPos.clone(),
+        new THREE.Vector3(cmPos.x, cmPos.y, 0)
+      ]);
+      const plumbMat = new THREE.LineDashedMaterial({ color: 0x4af070, dashSize: 1.5, gapSize: 1.1 });
+      const plumb = new THREE.Line(plumbGeo, plumbMat);
+      plumb.computeLineDistances();
+      gCM.add(plumb);
+
+      const realSupportPos = scadToPrint(
+        GEOM.shell2.c[0],
+        GEOM.shell2.c[1],
+        GEOM.shell2.c[2] + GEOM.shell2.a[2]
+      );
+      const realSphere = new THREE.Mesh(new THREE.SphereGeometry(1.8, 24, 16), materials.real);
+      realSphere.position.copy(realSupportPos);
+      gReal.add(realSphere);
+      const realAxisGeo = new THREE.BufferGeometry().setFromPoints([
+        realSupportPos.clone(),
+        new THREE.Vector3(realSupportPos.x, realSupportPos.y, cmPos.z + 10)
+      ]);
+      gReal.add(new THREE.Line(realAxisGeo, new THREE.LineBasicMaterial({ color: 0xf0a020 })));
+
+      const assumedSupportPos = scadToPrint(
+        GEOM.shell1.c[0],
+        GEOM.shell1.c[1],
+        GEOM.shell1.c[2] + GEOM.shell1.a[2]
+      );
+      const assumedSphere = new THREE.Mesh(new THREE.SphereGeometry(1.8, 24, 16), materials.assumed);
+      assumedSphere.position.copy(assumedSupportPos);
+      gAssumed.add(assumedSphere);
+      const assumedAxisGeo = new THREE.BufferGeometry().setFromPoints([
+        assumedSupportPos.clone(),
+        new THREE.Vector3(assumedSupportPos.x, assumedSupportPos.y, cmPos.z + 10)
+      ]);
+      gAssumed.add(new THREE.Line(assumedAxisGeo, new THREE.LineBasicMaterial({ color: 0xe04040 })));
+
+      const arrow = new THREE.ArrowHelper(
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(realSupportPos.x, realSupportPos.y, 0.08),
+        cmPos.x - realSupportPos.x,
+        0xff8f4a,
+        2.8,
+        1.5
+      );
+      gReal.add(arrow);
+
+      const table = new THREE.Mesh(new THREE.PlaneGeometry(220, 170), materials.table);
+      table.position.z = 0;
+      gTable.add(table);
+      const grid = new THREE.GridHelper(210, 21, 0x214732, 0x163225);
+      grid.rotation.x = Math.PI / 2;
+      grid.position.z = 0.03;
+      gTable.add(grid);
+
+      scene.add(gTable, gShell1, gShell2, gLimbs, gCM, gReal, gAssumed);
+
+      const target = new THREE.Vector3(realSupportPos.x, 0, cmPos.z * 0.58);
+      let radius = 152;
+      let theta = Math.PI * 0.16;
+      let phi = Math.PI * 0.38;
+      let panX = 0;
+      let panY = 0;
+
+      function updateCamera() {
+        const x = target.x + panX + radius * Math.sin(phi) * Math.cos(theta);
+        const y = target.y + panY + radius * Math.sin(phi) * Math.sin(theta);
+        const z = target.z + radius * Math.cos(phi);
+        camera.position.set(x, y, z);
+        camera.lookAt(target.x + panX, target.y + panY, target.z);
+      }
+      updateCamera();
+
+      let dragging = false;
+      let lastX = 0;
+      let lastY = 0;
+      let shift = false;
+
+      canvas.addEventListener("mousedown", (event) => {
+        dragging = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        shift = event.shiftKey;
+      });
+
+      window.addEventListener("mouseup", () => {
+        dragging = false;
+      });
+
+      window.addEventListener("mousemove", (event) => {
+        if (!dragging) return;
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+        lastX = event.clientX;
+        lastY = event.clientY;
+
+        if (shift) {
+          panX -= dx * 0.18 * Math.cos(theta) + dy * 0.18 * Math.sin(theta) * Math.cos(phi);
+          panY -= dx * 0.18 * Math.sin(theta) - dy * 0.18 * Math.cos(theta) * Math.cos(phi);
+        } else {
+          theta -= dx * 0.008;
+          phi = Math.max(0.14, Math.min(Math.PI - 0.14, phi - dy * 0.008));
+        }
+        updateCamera();
+      });
+
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        radius = Math.max(42, Math.min(420, radius * (1 + event.deltaY * 0.001)));
+        updateCamera();
+      }, { passive: false });
+
+      function bindToggle(id, group) {
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.addEventListener("change", () => {
+          group.visible = input.checked;
+        });
+      }
+
+      bindToggle("tgl-shell1", gShell1);
+      bindToggle("tgl-shell2", gShell2);
+      bindToggle("tgl-limbs", gLimbs);
+      bindToggle("tgl-cm", gCM);
+      bindToggle("tgl-real", gReal);
+      bindToggle("tgl-assumed", gAssumed);
+      bindToggle("tgl-table", gTable);
+
+      document.getElementById("tgl-wire").addEventListener("change", (event) => {
+        [materials.shell1, materials.shell2, materials.head, materials.limb].forEach((mat) => {
+          mat.wireframe = event.target.checked;
+        });
+      });
+
+      function resize() {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+
+      function loop() {
+        requestAnimationFrame(loop);
+        renderer.render(scene, camera);
+      }
+      loop();
+    })();
+  </script>
+</body>
+</html>

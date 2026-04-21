@@ -1,68 +1,73 @@
 /*
-  Tortuga 3D equilibrada sobre la punta de la cabeza.
+  Tortuga 3D para impresión.
 
-  Criterio fisico:
-  - La punta real de apoyo es el punto (0, 0, 0).
-  - El centro de masa se calibra para caer sobre esa vertical.
-  - Base disco oblato: radio horizontal a=0.42, radio vertical b=0.05
-    → curvatura efectiva R_eff = a^2/b = 3.53 unidades = 38.8 mm
-    → z_CM ≈ 0.68 unidades << R_eff  → estable en mesa plana y dedo
+  Ajustes aplicados a la versión imprimible:
+  - Caparazón macizo para eliminar la cavidad central y sus paredes internas débiles.
+  - Cuello, cabeza, aletas, patas y cola más gruesos para evitar tubos frágiles.
+  - Solapes más profundos con el caparazón para evitar uniones tangenciales que rompen la malla.
+
+  Se mantiene la orientación de exportación con el caparazón hacia la cama.
 */
 
-$fn = 96;
+$fn = 48;
 
 scale_mm = 11;
-front_lobe_scale = 2.604525;  // recalibrado con disco oblato a=0.42 b=0.05
-support_a = 0.42;             // semi-eje horizontal del disco de apoyo
-support_b = 0.05;             // semi-eje vertical  (R_eff = a^2/b = 3.528)
 
 module ellipsoid(c = [0, 0, 0], a = [1, 1, 1]) {
     translate(c) scale(a) sphere(r = 1);
 }
 
 module capsule(p0 = [0, 0, 0], p1 = [1, 0, 0], r = 0.2) {
-    hull() {
-        translate(p0) sphere(r = r);
-        translate(p1) sphere(r = r);
+    dx = p1[0] - p0[0];
+    dy = p1[1] - p0[1];
+    dz = p1[2] - p0[2];
+    len = sqrt(dx * dx + dy * dy + dz * dz);
+    axis = [-dy, dx, 0];
+    axis_norm = sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+    angle = len < 0.0001 ? 0 : acos(dz / len);
+
+    translate(p0) rotate(a = angle, v = axis_norm < 0.0001 ? [1, 0, 0] : axis) union() {
+        sphere(r = r);
+        cylinder(h = len, r = r, center = false);
+        translate([0, 0, len]) sphere(r = r);
     }
 }
 
-module support_head_tip() {
-    // Disco oblato: toca z=0 en (0,0,0), curvatura efectiva = a^2/b
-    translate([0, 0, support_b]) scale([support_a, support_a, support_b]) sphere(r = 1);
-}
-
-module shell_hollow() {
-    difference() {
-        union() {
-            ellipsoid(c = [-2.40, 0, 1.05], a = [1.95, 1.90, 0.95]);
-            ellipsoid(c = [-2.55, 0, 1.48], a = [1.45, 1.50, 0.74]);
-        }
-        ellipsoid(c = [-2.42, 0, 1.08], a = [1.48, 1.45, 0.62]);
-    }
-}
-
-module turtle_head_tip_balance() {
+module shell_printable() {
     union() {
-        shell_hollow();
-
-        capsule(p0 = [-1.55, 0, 0.72], p1 = [-0.55, 0, 0.40], r = 0.25);
-        ellipsoid(c = [-0.26, 0, 0.34], a = [0.58, 0.40, 0.28]);
-        capsule(p0 = [-0.08, 0, 0.18], p1 = [0.02, 0, 0.21], r = 0.10);
-        support_head_tip();
-
-        capsule(p0 = [-1.55, 0.95, 0.36], p1 = [1.55, 2.10, 0.24], r = 0.16);
-        capsule(p0 = [-1.55, -0.95, 0.36], p1 = [1.55, -2.10, 0.24], r = 0.16);
-        ellipsoid(c = [2.05, 2.25, 0.24], a = [1.35, 0.72, 0.16]);
-        ellipsoid(c = [2.05, -2.25, 0.24], a = [1.35, 0.72, 0.16]);
-
-        ellipsoid(c = [2.35, 2.20, 0.30], a = [1.18 * front_lobe_scale, 0.78 * front_lobe_scale, 0.08 * front_lobe_scale]);
-        ellipsoid(c = [2.35, -2.20, 0.30], a = [1.18 * front_lobe_scale, 0.78 * front_lobe_scale, 0.08 * front_lobe_scale]);
-
-        capsule(p0 = [-3.00, 1.0, 0.30], p1 = [-4.45, 1.82, 0.18], r = 0.12);
-        capsule(p0 = [-3.00, -1.0, 0.30], p1 = [-4.45, -1.82, 0.18], r = 0.12);
-        capsule(p0 = [-4.05, 0.0, 0.22], p1 = [-5.25, 0.0, 0.14], r = 0.08);
+        ellipsoid(c = [-2.40, 0, 1.05], a = [1.95, 1.90, 0.95]);
+        ellipsoid(c = [-2.52, 0, 1.46], a = [1.42, 1.46, 0.70]);
     }
 }
 
-scale([scale_mm, scale_mm, scale_mm]) turtle_head_tip_balance();
+module turtle_printable() {
+    union() {
+        shell_printable();
+
+        // ── Cuello ──
+        capsule(p0 = [-1.95, 0, 0.78], p1 = [-0.58, 0, 0.54], r = 0.28);
+
+        // ── Cabeza ──
+        ellipsoid(c = [-0.05, 0, 0.48], a = [0.74, 0.48, 0.40]);
+
+        // ── Hocico ──
+        capsule(p0 = [0.22, 0, 0.30], p1 = [0.42, 0, 0.33], r = 0.12);
+
+        // Los p0 arrancan dentro del caparazón para asegurar una unión robusta.
+        capsule(p0 = [-2.18,  0.72, 1.00], p1 = [ 0.95,  2.35, 0.76], r = 0.24);
+        capsule(p0 = [-2.18, -0.72, 1.00], p1 = [ 0.95, -2.35, 0.76], r = 0.24);
+
+        capsule(p0 = [-3.28,  0.82, 0.94], p1 = [-4.88,  1.78, 0.60], r = 0.20);
+        capsule(p0 = [-3.28, -0.82, 0.94], p1 = [-4.88, -1.78, 0.60], r = 0.20);
+
+        // ── Cola ──
+        capsule(p0 = [-4.18, 0, 0.72], p1 = [-5.30, 0, 0.58], r = 0.12);
+    }
+}
+
+// Orientación para imprimir: domo del caparazón abajo (z=0)
+render(convexity = 12)
+mirror([0, 0, 1])
+translate([0, 0, -(1.46 + 0.70)])   // sube toda la geometría para que nada quede bajo z=0
+scale([scale_mm, scale_mm, scale_mm])
+turtle_printable();

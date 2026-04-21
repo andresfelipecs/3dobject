@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo v2 - Integrales triples, centro de masa y equilibrio</title>
+<style>
+  :root {
+    --paper: #f7f3e8;
+    --paper-2: #fffdf8;
+    --ink: #19302a;
+    --muted: #5d766f;
+    --line: #d4ddd8;
+    --teal: #1b7b72;
+    --teal-deep: #0e5953;
+    --olive: #5b8e6e;
+    --olive-soft: #dfeee4;
+    --amber: #c9862d;
+    --amber-soft: #fff2df;
+    --blue: #2d74c8;
+    --blue-soft: #e9f2ff;
+    --danger: #b4563f;
+    --card: rgba(255, 253, 248, 0.92);
+    --shadow: 0 20px 44px rgba(35, 61, 53, 0.08);
+    --shell: #70b082;
+    --body: #83c79a;
+    --limb: #5e9a63;
+    --contact: #d9922a;
+    --proj: #3d7cff;
+    --cm: #1d9b66;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at top left, rgba(112, 176, 130, 0.12), transparent 28%),
+      radial-gradient(circle at top right, rgba(61, 124, 255, 0.08), transparent 24%),
+      linear-gradient(180deg, #fcfaf5, var(--paper));
+    font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    color: var(--muted);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  code {
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    background: rgba(27, 123, 114, 0.09);
+    color: var(--teal-deep);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.94em;
+  }
+
+  .math {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    color: var(--ink);
+    letter-spacing: 0;
+  }
+
+  .page {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 32px 24px 84px;
+  }
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: rgba(255, 253, 248, 0.8);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 16px;
+    z-index: 10;
+  }
+
+  .brand {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+    font-size: 0.82rem;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nav-links a {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    color: var(--muted);
+    font-size: 0.88rem;
+    transition: transform 120ms ease, border-color 120ms ease, color 120ms ease, background 120ms ease;
+  }
+
+  .nav-links a:hover {
+    transform: translateY(-1px);
+    border-color: rgba(27, 123, 114, 0.24);
+    color: var(--teal-deep);
+    background: rgba(27, 123, 114, 0.05);
+  }
+
+  .hero {
+    padding: 34px 0 24px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(27, 123, 114, 0.08);
+    border: 1px solid rgba(27, 123, 114, 0.12);
+    color: var(--teal-deep);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 0 6px rgba(27, 123, 114, 0.12);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.6rem, 5vw, 4.8rem);
+    max-width: 11ch;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span {
+    color: var(--teal);
+  }
+
+  .hero-lead {
+    max-width: 62ch;
+    font-size: 1.08rem;
+    margin-bottom: 20px;
+  }
+
+  .hero-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tag {
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .summary-card,
+  .panel,
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .summary-card {
+    padding: 22px;
+  }
+
+  .summary-card h2 {
+    font-size: 1.48rem;
+    margin-bottom: 14px;
+  }
+
+  .summary-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .summary-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(25, 48, 42, 0.08);
+    font-size: 0.98rem;
+  }
+
+  .summary-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .summary-row .label {
+    color: var(--muted);
+  }
+
+  .summary-row .value {
+    color: var(--ink);
+    font-weight: 700;
+    text-align: right;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  .summary-note {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: var(--olive-soft);
+    color: var(--ink);
+    font-size: 0.96rem;
+  }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 28px;
+  }
+
+  .metric {
+    padding: 18px;
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.74);
+    box-shadow: var(--shadow);
+  }
+
+  .metric .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  .metric .value {
+    font-size: 1.7rem;
+    color: var(--teal-deep);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric p {
+    font-size: 0.92rem;
+  }
+
+  .section {
+    margin-top: 34px;
+  }
+
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--teal-deep);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .section-kicker::before {
+    content: "";
+    width: 28px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--teal);
+  }
+
+  .section-head h2 {
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+  }
+
+  .section-head p {
+    max-width: 56ch;
+  }
+
+  .viewer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) 360px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .viewer-card {
+    padding: 18px;
+  }
+
+  .viewer-top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .viewer-title {
+    display: grid;
+    gap: 4px;
+  }
+
+  .viewer-title h3 {
+    font-size: 1.42rem;
+  }
+
+  .viewer-title p {
+    font-size: 0.94rem;
+  }
+
+  .viewer-mode {
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: var(--amber-soft);
+    border: 1px solid rgba(201, 134, 45, 0.18);
+    color: #7a4c09;
+    font-weight: 700;
+    font-size: 0.88rem;
+    align-self: start;
+  }
+
+  .scene-wrap {
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    background:
+      radial-gradient(circle at 50% 18%, rgba(61, 124, 255, 0.12), transparent 26%),
+      linear-gradient(180deg, #fbfaf6, #ecf3ef);
+  }
+
+  canvas#scene {
+    display: block;
+    width: 100%;
+    height: 540px;
+    cursor: grab;
+  }
+
+  canvas#scene:active {
+    cursor: grabbing;
+  }
+
+  .scene-caption {
+    margin-top: 12px;
+    padding: 0 4px;
+    font-size: 0.93rem;
+  }
+
+  .sidebar {
+    display: grid;
+    gap: 18px;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .panel h3 {
+    font-size: 1.12rem;
+    margin-bottom: 10px;
+  }
+
+  .readout {
+    display: grid;
+    gap: 9px;
+  }
+
+  .readout .item {
+    padding-bottom: 9px;
+    border-bottom: 1px solid rgba(25, 48, 42, 0.08);
+    font-size: 0.95rem;
+  }
+
+  .readout .item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .readout b {
+    color: var(--ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  .mode-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 14px;
+  }
+
+  .mode-btn {
+    border: 1px solid rgba(25, 48, 42, 0.1);
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 9px 12px;
+    font: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  }
+
+  .mode-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(27, 123, 114, 0.22);
+    background: rgba(27, 123, 114, 0.05);
+  }
+
+  .mode-btn.active {
+    background: linear-gradient(180deg, rgba(27, 123, 114, 0.12), rgba(27, 123, 114, 0.05));
+    border-color: rgba(27, 123, 114, 0.28);
+    color: var(--teal-deep);
+    font-weight: 700;
+  }
+
+  .toggle-list {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .toggle-list label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.94rem;
+  }
+
+  .toggle-list input {
+    accent-color: var(--teal);
+  }
+
+  .support-readout {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(25, 48, 42, 0.08);
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .support-readout b {
+    color: var(--ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  .mini-canvas {
+    display: block;
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    background: linear-gradient(180deg, #f9fbfa, #edf4f0);
+  }
+
+  #micro {
+    aspect-ratio: 1 / 1;
+  }
+
+  #gauge {
+    height: 230px;
+    margin-top: 10px;
+  }
+
+  .tiny-note {
+    margin-top: 10px;
+    font-size: 0.88rem;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  .card h3 {
+    font-size: 1.24rem;
+    margin-bottom: 10px;
+  }
+
+  .card p + p {
+    margin-top: 10px;
+  }
+
+  .formula-block {
+    margin-top: 14px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: rgba(243, 248, 245, 0.92);
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    overflow-x: auto;
+  }
+
+  .formula-title {
+    color: var(--teal-deep);
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .formula-line {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.95rem;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .formula-line + .formula-line {
+    margin-top: 8px;
+  }
+
+  .process-steps {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .step {
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .step-number {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--teal), var(--teal-deep));
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.9rem;
+    flex: 0 0 auto;
+  }
+
+  .step-header h4 {
+    font-size: 1.05rem;
+  }
+
+  .step p {
+    font-size: 0.95rem;
+  }
+
+  .list {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .list .row {
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--ink);
+  }
+
+  .pill-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    background: var(--amber-soft);
+    color: #7a4c09;
+    border: 1px solid rgba(201, 134, 45, 0.16);
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin-top: 14px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+  }
+
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    color: var(--muted);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(25, 48, 42, 0.1);
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(25, 48, 42, 0.08);
+    vertical-align: top;
+    color: var(--ink);
+    font-size: 0.95rem;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .mono {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pos {
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  .neg {
+    color: var(--teal-deep);
+    font-weight: 700;
+  }
+
+  .ok {
+    color: var(--cm);
+    font-weight: 700;
+  }
+
+  .warn {
+    color: var(--danger);
+    font-weight: 700;
+  }
+
+  .note-box {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(27, 123, 114, 0.12);
+    background: rgba(27, 123, 114, 0.06);
+  }
+
+  .note-box strong {
+    color: var(--ink);
+  }
+
+  .code-block {
+    margin-top: 14px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    background: #f3f7f5;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.9rem;
+    color: var(--ink);
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .callout-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+  }
+
+  .callout {
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    background: rgba(255, 255, 255, 0.76);
+  }
+
+  .callout h4 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .footer-box {
+    margin-top: 26px;
+    padding: 20px 22px;
+    border-radius: 22px;
+    border: 1px solid rgba(25, 48, 42, 0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(237,244,240,0.84));
+    box-shadow: var(--shadow);
+  }
+
+  .footer-box h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+  }
+
+  .footer-box p + p {
+    margin-top: 10px;
+  }
+
+  @media (max-width: 1100px) {
+    .hero-grid,
+    .viewer-grid,
+    .grid-2,
+    .grid-3,
+    .callout-grid,
+    .metric-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .page {
+      padding: 18px 14px 54px;
+    }
+
+    .topbar {
+      top: 10px;
+      padding: 12px 14px;
+    }
+
+    .hero {
+      padding-top: 24px;
+    }
+
+    canvas#scene {
+      height: 420px;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="topbar">
+    <div class="brand">Modelo v2 · Centro de Masa</div>
+    <nav class="nav-links">
+      <a href="#visor">Visor</a>
+      <a href="#integrales">Integrales</a>
+      <a href="#piezas">Piezas</a>
+      <a href="#equilibrio">Equilibrio</a>
+      <a href="#resumen">Resumen</a>
+    </nav>
+  </div>
+
+  <section class="hero">
+    <div class="eyebrow">Modelo v2 explicado paso a paso</div>
+    <div class="hero-grid">
+      <div>
+        <h1>Centro de masa con <span>integrales triples</span></h1>
+        <p class="hero-lead">
+          Esta version ya no solo muestra que la tortuga se equilibra: explica con claridad
+          <strong>que se integra</strong>, <strong>por que esas integrales dan el centro de masa</strong>
+          y <strong>como ese resultado se conecta con el punto de apoyo y el equilibrio</strong>.
+        </p>
+        <div class="hero-points">
+          <span class="tag">Densidad uniforme: <code>rho = constante</code></span>
+          <span class="tag">Region 3D: <code>T</code> = solido completo</span>
+          <span class="tag">Apoyo curvo: punto de contacto + curvatura</span>
+        </div>
+      </div>
+
+      <aside class="summary-card">
+        <h2>Lectura rapida del resultado</h2>
+        <div class="summary-list">
+          <div class="summary-row">
+            <span class="label">CM respecto al apoyo</span>
+            <span class="value" id="summaryCmRel"></span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Volumen del modelo completo</span>
+            <span class="value" id="summaryVolume"></span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Offset horizontal</span>
+            <span class="value" id="summaryOffset"></span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Condicion vertical en mesa</span>
+            <span class="value" id="summaryVertical"></span>
+          </div>
+        </div>
+        <div class="summary-note" id="summaryNote"></div>
+      </aside>
+    </div>
+
+    <div class="metric-grid">
+      <article class="metric">
+        <div class="kicker">Offset XY</div>
+        <div class="value" id="metricOffset"></div>
+        <p>Distancia entre la proyeccion del CM y el punto nominal de apoyo.</p>
+      </article>
+      <article class="metric">
+        <div class="kicker">z del CM</div>
+        <div class="value" id="metricZcm"></div>
+        <p>Altura del centro de masa medida desde el apoyo.</p>
+      </article>
+      <article class="metric">
+        <div class="kicker">R de la mesa</div>
+        <div class="value" id="metricReff"></div>
+        <p>Curvatura efectiva del domo de apoyo: <span class="math">R_eff = a² / c</span>.</p>
+      </article>
+      <article class="metric">
+        <div class="kicker">Margen en dedo 10</div>
+        <div class="value" id="metricFinger10"></div>
+        <p>Como <span class="math">z_CM &lt; R_comb</span>, el dedo tambien produce equilibrio estable.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="visor">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Visualizacion</div>
+        <h2>Ver el calculo sobre la geometria</h2>
+      </div>
+      <p>
+        El visor deja ver la pieza, el centro de masa, el punto de apoyo y la proyeccion vertical.
+        Lo importante no es solo el punto verde, sino <strong>como cae ese punto respecto al apoyo</strong>.
+      </p>
+    </div>
+
+    <div class="viewer-grid">
+      <article class="viewer-card card">
+        <div class="viewer-top">
+          <div class="viewer-title">
+            <h3>Tortuga v2 en coordenadas de impresion</h3>
+            <p>
+              Este visor usa la <strong>malla STL exacta</strong> de <code>tortuga_v2_IMPRIMIR.stl</code>.
+              El punto naranja es el apoyo nominal, el verde es el centro de masa y el azul
+              es la proyeccion vertical del centro de masa sobre el apoyo.
+            </p>
+          </div>
+          <div class="viewer-mode" id="viewerModeLabel">Mesa plana</div>
+        </div>
+        <div class="scene-wrap">
+          <canvas id="scene"></canvas>
+        </div>
+        <p class="scene-caption">
+          Arrastra para rotar y usa la rueda del mouse para acercar. La forma visible viene de la
+          <code>STL</code> final del modelo v2, mientras que las integrales y la descomposicion matematica
+          se explican a partir del <code>modelo_tortuga_v2.scad</code>.
+        </p>
+      </article>
+
+      <div class="sidebar">
+        <aside class="panel">
+          <h3>Numeros clave del apoyo</h3>
+          <div class="readout">
+            <div class="item">Apoyo nominal: <b id="readoutSupport"></b></div>
+            <div class="item">CM absoluto: <b id="readoutCmAbs"></b></div>
+            <div class="item">CM relativo al apoyo: <b id="readoutCmRel"></b></div>
+            <div class="item">Volumen total exacto: <b id="readoutVolume"></b></div>
+          </div>
+        </aside>
+
+        <aside class="panel">
+          <h3>Modo de apoyo</h3>
+          <p>La misma geometria se compara contra mesa y contra dedo para ver como cambia la condicion de estabilidad.</p>
+          <div class="mode-buttons">
+            <button class="mode-btn active" data-mode="table">Mesa</button>
+            <button class="mode-btn" data-mode="finger" data-radius="8">Dedo 8 mm</button>
+            <button class="mode-btn" data-mode="finger" data-radius="10">Dedo 10 mm</button>
+            <button class="mode-btn" data-mode="finger" data-radius="15">Dedo 15 mm</button>
+          </div>
+
+          <div class="toggle-list">
+            <label><input type="checkbox" id="tgl-mesh" checked>Mostrar malla real del STL</label>
+            <label><input type="checkbox" id="tgl-cm" checked>Mostrar centro de masa</label>
+            <label><input type="checkbox" id="tgl-contact" checked>Mostrar apoyo nominal</label>
+            <label><input type="checkbox" id="tgl-project" checked>Mostrar proyeccion del CM</label>
+            <label><input type="checkbox" id="tgl-plumb" checked>Mostrar plomada y guia</label>
+          </div>
+
+          <div class="support-readout" id="supportReadout"></div>
+        </aside>
+
+        <aside class="panel">
+          <h3>Vista superior: alineacion horizontal</h3>
+          <canvas id="micro" class="mini-canvas" width="320" height="320"></canvas>
+          <p class="tiny-note">
+            Aqui solo miramos el plano horizontal. Si el punto azul quedara muy lejos del apoyo,
+            la tortuga se iria hacia ese lado aunque el calculo vertical fuera bueno.
+          </p>
+        </aside>
+
+        <aside class="panel">
+          <h3>Lectura vertical del equilibrio</h3>
+          <canvas id="gauge" class="mini-canvas" width="320" height="230"></canvas>
+          <p class="tiny-note">
+            Este grafico compara <span class="math">z_CM</span> con el radio de curvatura que realmente gobierna el apoyo actual.
+          </p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="integrales">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Integrales triples</div>
+        <h2>Que se integra y por que funciona</h2>
+      </div>
+      <p>
+        La idea es muy simple: una integral triple suma infinitas porciones pequenas de volumen.
+        Si cada porcion tiene la misma densidad, entonces el centro de masa se obtiene a partir de
+        <strong>volumen total</strong> y <strong>momentos volumetricos</strong>.
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <article class="card">
+        <h3>1. Region y densidad</h3>
+        <p>
+          Llamemos <code>T</code> al solido ocupado por toda la tortuga v2. Como la pieza se imprime en un solo
+          material, tomamos <code>rho</code> constante. Eso hace que la densidad se pueda sacar de las razones y nos
+          queden formulas muy limpias.
+        </p>
+        <div class="formula-block">
+          <div class="formula-title">Formulas base</div>
+          <div class="formula-line">V = ∭_T 1 dV</div>
+          <div class="formula-line">M_x = ∭_T x dV</div>
+          <div class="formula-line">M_y = ∭_T y dV</div>
+          <div class="formula-line">M_z = ∭_T z dV</div>
+          <div class="formula-line">(x̄, ȳ, z̄) = (M_x / V, M_y / V, M_z / V)</div>
+        </div>
+        <div class="list">
+          <div class="row"><strong>∭ 1 dV</strong> solo cuenta cuanto material hay.</div>
+          <div class="row"><strong>∭ x dV</strong> pesa cada porcion por su distancia hacia cabeza o cola.</div>
+          <div class="row"><strong>∭ y dV</strong> mide si el modelo se carga hacia izquierda o derecha.</div>
+          <div class="row"><strong>∭ z dV</strong> nos dice que tan alta queda la masa respecto al apoyo.</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>2. Conviene mover el origen al apoyo</h3>
+        <p>
+          Para estudiar equilibrio no basta saber el CM absoluto; lo mas util es medirlo
+          <strong>respecto al punto de apoyo</strong>. Asi el apoyo queda en el origen y todo se interpreta directo.
+        </p>
+        <div class="formula-block">
+          <div class="formula-title">Sistema relativo al apoyo</div>
+          <div class="formula-line">x' = x - x_soporte</div>
+          <div class="formula-line">y' = y - y_soporte</div>
+          <div class="formula-line">z' = z</div>
+          <div class="formula-line">CM_rel = (x̄', ȳ', z̄') = (<span id="cmRelInline"></span>)</div>
+        </div>
+        <p>
+          En esta pagina veras dos lecturas distintas del mismo resultado:
+          <strong>horizontal</strong> para saber hacia que lado quiere caer la pieza, y
+          <strong>vertical</strong> para saber si la curvatura del apoyo la devuelve a la posicion de equilibrio.
+        </p>
+        <div class="pill-note">
+          En una base plana grande se usa el area de soporte. Aqui, como el apoyo es curvo y casi puntual,
+          necesitamos mirar tambien la curvatura local.
+        </div>
+      </article>
+    </div>
+
+    <article class="card" style="margin-top:18px;">
+      <h3>3. Desarrollo detallado del caparazon del modelo v2</h3>
+      <p>
+        El caparazon de v2 es la pieza mas importante porque define la superficie de apoyo.
+        Se modela como <strong>media elipsoide</strong> de radios <span class="math">a = 2.50 u</span> y
+        <span class="math">c = 0.75 u</span>, con <span class="math">1 u = 11 mm</span>.
+      </p>
+
+      <div class="process-steps">
+        <div class="step">
+          <div class="step-header">
+            <span class="step-number">1</span>
+            <h4>Definimos la region del domo</h4>
+          </div>
+          <p>
+            En coordenadas del modelo, el caparazon cumple la ecuacion de una media elipsoide.
+            El centro en <span class="math">x</span> esta corrido a <span class="math">CX = -0.1159 u</span>
+            para acercar el apoyo al centro de masa final.
+          </p>
+          <div class="formula-block">
+            <div class="formula-line">((x - CX)^2 / a^2) + (y^2 / a^2) + ((z - z_cut)^2 / c^2) ≤ 1</div>
+            <div class="formula-line">z ≥ z_cut</div>
+            <div class="formula-line">a = 2.50 u, c = 0.75 u, z_cut = 1.25 u</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <span class="step-number">2</span>
+            <h4>Calculamos el volumen con una integral triple</h4>
+          </div>
+          <p>
+            Primero despejamos la cota superior <span class="math">z_sup(x, y)</span>. Luego integramos
+            la altura del domo sobre su base eliptica. En coordenadas polares elipticas la cuenta se simplifica.
+          </p>
+          <div class="formula-block">
+            <div class="formula-line">z_sup(x, y) = z_cut + c sqrt(1 - ((x - CX)^2 + y^2) / a^2)</div>
+            <div class="formula-line">V_shell = ∬_D (z_sup - z_cut) dA</div>
+            <div class="formula-line">V_shell = ∫_0^(2pi) ∫_0^1 c sqrt(1 - r^2) a^2 r dr dtheta</div>
+            <div class="formula-line">V_shell = (2 / 3) pi a^2 c = <span id="shellVolumeInline"></span></div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <span class="step-number">3</span>
+            <h4>Calculamos el momento respecto al plano de corte</h4>
+          </div>
+          <p>
+            Para encontrar la altura del centroide del caparazon, medimos la variable local
+            <span class="math">w = z - z_cut</span>. Eso deja el momento en una forma directa.
+          </p>
+          <div class="formula-block">
+            <div class="formula-line">M_w = ∭_shell w dV</div>
+            <div class="formula-line">M_w = ∫_0^(2pi) ∫_0^1 ∫_0^(c sqrt(1-r^2)) w a^2 r dw dr dtheta</div>
+            <div class="formula-line">M_w = (pi a^2 c^2) / 4</div>
+            <div class="formula-line">w̄ = M_w / V_shell = 3c / 8</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">
+            <span class="step-number">4</span>
+            <h4>Llevamos ese centroide al sistema de impresion</h4>
+          </div>
+          <p>
+            En impresion el apoyo queda en <span class="math">z = 0</span>. Al invertir el eje vertical, el centroide
+            del caparazon queda a <span class="math">5c/8</span> por encima del apoyo. Esa es una lectura fisica mucho mas util.
+          </p>
+          <div class="formula-block">
+            <div class="formula-line">z_shell,rel = (5 / 8) c · 11 = <span id="shellCentroidInline"></span></div>
+            <div class="formula-line">x_shell,rel = 0</div>
+            <div class="formula-line">y_shell,rel = 0</div>
+          </div>
+          <p>
+            Este dato ya da una intuicion importante: el volumen principal del modelo esta relativamente bajo respecto
+            al apoyo, y eso ayuda mucho a la estabilidad.
+          </p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="section" id="piezas">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Piezas y aportes</div>
+        <h2>Como se arma el centro de masa del solido completo</h2>
+      </div>
+      <p>
+        Para entender el uso de las integrales, conviene mirar cada pieza como un aporte de volumen y momento.
+        Primero hacemos una suma didactica por piezas; despues recordamos que el calculo final exacto usa la union completa.
+      </p>
+    </div>
+
+    <div class="grid-3">
+      <article class="card">
+        <h3>Media elipsoide</h3>
+        <p>Caparazon principal de apoyo. Aporta la mayor parte del volumen y mantiene el CM relativamente bajo.</p>
+        <div class="formula-block">
+          <div class="formula-line">V = (2 / 3) pi abc</div>
+          <div class="formula-line">Centroide = (cx, cy, z_cut + 3c / 8)</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>Elipsoide completo</h3>
+        <p>Se usa en la cabeza. Por simetria, su centroide coincide con su centro geometrico.</p>
+        <div class="formula-block">
+          <div class="formula-line">V = (4 / 3) pi abc</div>
+          <div class="formula-line">Centroide = centro del elipsoide</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>Capsula</h3>
+        <p>Modela cuello, patas, aletas y cola. Es un cilindro con dos semiesferas.</p>
+        <div class="formula-block">
+          <div class="formula-line">V = pi r^2 L + (4 / 3) pi r^3</div>
+          <div class="formula-line">Centroide = punto medio del segmento</div>
+        </div>
+      </article>
+    </div>
+
+    <article class="card" style="margin-top:18px;">
+      <h3>Suma aproximada por piezas, medida desde el apoyo</h3>
+      <p>
+        Esta tabla ignora los pequenos solapes internos entre piezas y sirve para entender la logica del desplazamiento.
+        Los aportes positivos en <span class="math">V_i x_i</span> tiran hacia la cabeza; los negativos tiran hacia la cola.
+      </p>
+      <div class="formula-block">
+        <div class="formula-title">Aproximacion didactica</div>
+        <div class="formula-line">V_aprox = sum V_i</div>
+        <div class="formula-line">M_x,aprox = sum V_i x_i</div>
+        <div class="formula-line">M_z,aprox = sum V_i z_i</div>
+        <div class="formula-line">CM_aprox = (sum V_i r_i) / (sum V_i)</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Pieza</th>
+              <th>Tipo</th>
+              <th>Volumen aprox.</th>
+              <th>x relativo</th>
+              <th>z relativo</th>
+              <th>Aporte V·x</th>
+            </tr>
+          </thead>
+          <tbody id="pieceTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="note-box" id="approxSummary"></div>
+    </article>
+
+    <div class="grid-2" style="margin-top:18px;">
+      <article class="card">
+        <h3>De la suma didactica al calculo exacto</h3>
+        <p>
+          La tortuga real no es una suma separada de solidos aislados: hay uniones y solapes. Para no contar dos veces
+          esos volumenes, el calculo final se hace con una <strong>funcion caracteristica</strong> de la union.
+        </p>
+        <div class="formula-block">
+          <div class="formula-title">Union exacta</div>
+          <div class="formula-line">chi_T(p) = 1 si el punto p esta dentro de la tortuga</div>
+          <div class="formula-line">chi_T(p) = 1 - product_i (1 - chi_i(p))</div>
+          <div class="formula-line">V = ∭ chi_T dV</div>
+          <div class="formula-line">M_x = ∭ x chi_T dV,  M_y = ∭ y chi_T dV,  M_z = ∭ z chi_T dV</div>
+        </div>
+        <p>
+          Esta es la forma correcta de integrar sobre el modelo completo. Conceptualmente es igual a las integrales anteriores,
+          solo que ahora la region viene dada por una prueba de pertenencia a toda la union.
+        </p>
+      </article>
+
+      <article class="card">
+        <h3>Como se evalua en practica</h3>
+        <p>
+          Cuando el solido es organico y esta hecho por varias primitivas, lo mas practico es integrar numericamente.
+          Una manera clara es Monte Carlo: tomar muchos puntos de una caja contenedora y sumar solo los que caen dentro de la tortuga.
+        </p>
+        <div class="code-block">para k = 1 ... N
+  elegir punto p_k dentro de una caja
+  si p_k pertenece a T:
+    sumar 1
+    sumar x_k
+    sumar y_k
+    sumar z_k
+
+V  ≈ (V_caja / N) * sum chi_T(p_k)
+Mx ≈ (V_caja / N) * sum x_k * chi_T(p_k)
+My ≈ (V_caja / N) * sum y_k * chi_T(p_k)
+Mz ≈ (V_caja / N) * sum z_k * chi_T(p_k)</div>
+        <p>
+          El resultado final del modelo v2 que se muestra aqui es:
+          <strong id="exactResultInline"></strong>.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="equilibrio">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Centro de soporte y equilibrio</div>
+        <h2>Como se relaciona el centro de masa con el apoyo</h2>
+      </div>
+      <p>
+        Para que el modelo se mantenga, no basta con encontrar el centro de masa. Luego hay que compararlo con la geometria
+        del apoyo. En este proyecto aparecen dos pruebas: una <strong>horizontal</strong> y una <strong>vertical</strong>.
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <article class="card">
+        <h3>Prueba horizontal: proyeccion del CM</h3>
+        <p>
+          Proyectamos el centro de masa verticalmente sobre el plano del apoyo. Si esa proyeccion cae muy lejos del punto
+          de contacto, la pieza se inclinara hacia ese lado.
+        </p>
+        <div class="formula-block">
+          <div class="formula-title">Chequeo lateral</div>
+          <div class="formula-line">Pi_CM = (x_CM, y_CM, 0)</div>
+          <div class="formula-line">offset_XY = sqrt((x_CM - x_soporte)^2 + (y_CM - y_soporte)^2)</div>
+          <div class="formula-line">offset_XY = <span id="offsetInline"></span></div>
+        </div>
+        <p>
+          En palabras simples: este numero mide si la tortuga esta "cargada" hacia un lado.
+          En el modelo v2 el valor es muy pequeno, por eso la proyeccion cae casi encima del apoyo.
+        </p>
+      </article>
+
+      <article class="card">
+        <h3>Prueba vertical: altura del CM vs curvatura</h3>
+        <p>
+          Como el apoyo es curvo, el criterio correcto no es solo "estar encima del punto". Tambien necesitamos que el
+          centro de masa quede por debajo del radio de curvatura que gobierna el contacto.
+        </p>
+        <div class="formula-block">
+          <div class="formula-title">Chequeo de estabilidad</div>
+          <div class="formula-line">R_eff = a^2 / c = <span id="rEffInline"></span></div>
+          <div class="formula-line">Mesa: estable si z_CM &lt; R_eff</div>
+          <div class="formula-line">Dedo: R_comb = (R_eff * r) / (R_eff + r)</div>
+          <div class="formula-line">Dedo: estable si z_CM &lt; R_comb</div>
+        </div>
+        <p>
+          Interpretacion fisica: cuando se inclina un poco, si el CM tiene que subir para seguir rodando,
+          entonces la gravedad lo devuelve. Eso es equilibrio estable.
+        </p>
+      </article>
+    </div>
+
+    <article class="card" style="margin-top:18px;">
+      <h3>Comparacion de condiciones de equilibrio</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Apoyo</th>
+              <th>Radio util</th>
+              <th>Condicion</th>
+              <th>Margen</th>
+              <th>Lectura</th>
+            </tr>
+          </thead>
+          <tbody id="stabilityTableBody"></tbody>
+        </table>
+      </div>
+      <div class="note-box">
+        <strong>Idea clave:</strong> en una base plana ancha normalmente hablamos del area o poligono de soporte.
+        En esta tortuga v2 el apoyo es un domo curvo, casi puntual, asi que el lenguaje mas util es:
+        <strong>punto de apoyo + proyeccion horizontal del CM + curvatura del contacto</strong>.
+      </div>
+    </article>
+
+    <div class="callout-grid">
+      <article class="callout">
+        <h4>Si el offset horizontal fuera grande</h4>
+        <p>El peso no quedaria centrado y la pieza comenzaria a rodar hacia el lado mas pesado.</p>
+      </article>
+      <article class="callout">
+        <h4>Si z_CM fuera mayor que la curvatura util</h4>
+        <p>Una pequena perturbacion haria bajar el centro de masa y la posicion inicial seria inestable.</p>
+      </article>
+      <article class="callout">
+        <h4>Como usa esto cualquier solido</h4>
+        <p>Describe la region, integra volumen y momentos, proyecta el CM y compara ese punto con la base real de apoyo.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="resumen">
+    <div class="footer-box">
+      <h3>Resumen facil para exponer</h3>
+      <p>
+        Primero describimos la tortuga como un solido 3D hecho de una media elipsoide, una cabeza elipsoidal y varias capsulas.
+        Luego usamos integrales triples para sumar volumen y momentos: <span class="math">∭ 1 dV</span>,
+        <span class="math">∭ x dV</span>, <span class="math">∭ y dV</span> y <span class="math">∭ z dV</span>.
+      </p>
+      <p>
+        Al dividir los momentos entre el volumen obtenemos el centro de masa. Despues lo medimos respecto al apoyo y vemos dos cosas:
+        la proyeccion horizontal casi coincide con el punto de apoyo y la altura del CM es mucho menor que la curvatura efectiva del domo.
+        Por eso el modelo v2 si puede regresar a su posicion de equilibrio.
+      </p>
+      <p>
+        En otras palabras: <strong>las integrales triples nos dicen donde actua el peso</strong>, y la geometria del apoyo nos dice
+        <strong>si ese peso hace volver a la pieza o la hace caer</strong>.
+      </p>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="tortuga_v2_mesh.js"></script>
+<script>
+(function () {
+  const MODEL = {
+    S: 11.0,
+    shellA: 2.50,
+    shellC: 0.75,
+    shellZCut: 1.25,
+    shellZTop: 2.00,
+    cx: -0.1159,
+    volumeCm3: 14.6443,
+    cmPrint: [-1.0232939, -0.0102157, 5.6661347],
+    limbs: [
+      { name: "Cuello", type: "capsule", p0: [-0.35, 0.00, 1.20], p1: [ 0.95, 0.00, 1.03], r: 0.20, mat: "body" },
+      { name: "Cabeza", type: "ellipsoid", c: [1.32, 0.00, 1.04], a: [0.58, 0.38, 0.30], mat: "body" },
+      { name: "Hocico", type: "capsule", p0: [1.62, 0.00, 0.94], p1: [1.82, 0.00, 0.95], r: 0.10, mat: "body" },
+      { name: "Aleta delantera izq.", type: "capsule", p0: [-0.05, 0.55, 1.22], p1: [ 1.85,  2.30, 1.02], r: 0.18, mat: "limb" },
+      { name: "Aleta delantera der.", type: "capsule", p0: [-0.05,-0.55, 1.22], p1: [ 1.85, -2.30, 1.02], r: 0.18, mat: "limb" },
+      { name: "Pata trasera izq.", type: "capsule", p0: [-1.00, 0.72, 1.22], p1: [-2.60,  1.80, 1.04], r: 0.16, mat: "limb" },
+      { name: "Pata trasera der.", type: "capsule", p0: [-1.00,-0.72, 1.22], p1: [-2.60, -1.80, 1.04], r: 0.16, mat: "limb" },
+      { name: "Cola", type: "capsule", p0: [-1.80, 0.00, 1.20], p1: [-3.05,  0.00, 1.12], r: 0.10, mat: "limb" }
+    ]
+  };
+
+  const supportPoint = { x: MODEL.cx * MODEL.S, y: 0, z: 0 };
+  const cmAbs = { x: MODEL.cmPrint[0], y: MODEL.cmPrint[1], z: MODEL.cmPrint[2] };
+  const cmRel = {
+    x: cmAbs.x - supportPoint.x,
+    y: cmAbs.y - supportPoint.y,
+    z: cmAbs.z
+  };
+  const offsetXY = Math.hypot(cmRel.x, cmRel.y);
+  const aMm = MODEL.shellA * MODEL.S;
+  const cMm = MODEL.shellC * MODEL.S;
+  const rEff = aMm * aMm / cMm;
+  const shellVolumeU3 = (2 / 3) * Math.PI * MODEL.shellA * MODEL.shellA * MODEL.shellC;
+  const shellVolumeCm3 = u3ToCm3(shellVolumeU3);
+  const shellCentroidRelZ = (5 * cMm) / 8;
+  const supports = [
+    {
+      key: "table",
+      label: "Mesa plana",
+      radius: rEff,
+      radiusLabel: "R_eff",
+      margin: rEff - cmRel.z,
+      readout: "Se compara directamente la altura del CM con la curvatura del domo."
+    },
+    {
+      key: "finger-8",
+      label: "Dedo 8 mm",
+      radius: combinedRadius(8),
+      radiusLabel: "R_comb",
+      margin: combinedRadius(8) - cmRel.z,
+      readout: "El dedo reduce la curvatura util, pero aun queda margen positivo."
+    },
+    {
+      key: "finger-10",
+      label: "Dedo 10 mm",
+      radius: combinedRadius(10),
+      radiusLabel: "R_comb",
+      margin: combinedRadius(10) - cmRel.z,
+      readout: "Este era el caso mas importante para el diseno v2."
+    },
+    {
+      key: "finger-15",
+      label: "Dedo 15 mm",
+      radius: combinedRadius(15),
+      radiusLabel: "R_comb",
+      margin: combinedRadius(15) - cmRel.z,
+      readout: "Con radio mayor, la condicion mejora todavia mas."
+    }
+  ];
+
+  const approxPieces = [
+    {
+      name: "Caparazon",
+      typeLabel: "Media elipsoide",
+      kind: "halfEllipsoid",
+      center: [MODEL.cx, 0, MODEL.shellZCut],
+      axes: [MODEL.shellA, MODEL.shellA, MODEL.shellC]
+    },
+    ...MODEL.limbs.map(part => ({
+      name: part.name,
+      typeLabel: part.type === "capsule" ? "Capsula" : "Elipsoide",
+      ...part
+    }))
+  ];
+
+  fillHero();
+  fillReadouts();
+  fillPieceTable();
+  fillStabilityTable();
+  fillInlineMath();
+
+  buildViewer();
+  drawMicro();
+  drawGauge("table", 0);
+
+  function fmtMm(value, digits = 3) {
+    const abs = Math.abs(value).toFixed(digits);
+    return `${value < 0 ? "-" : ""}${abs} mm`;
+  }
+
+  function fmtTuple(tuple, digits = 3) {
+    return `(${tuple.map(value => `${value < 0 ? "-" : ""}${Math.abs(value).toFixed(digits)}`).join(", ")})`;
+  }
+
+  function u3ToCm3(value) {
+    return value * MODEL.S * MODEL.S * MODEL.S / 1000;
+  }
+
+  function distance3(a, b) {
+    return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  }
+
+  function combinedRadius(fingerRadius) {
+    return (rEff * fingerRadius) / (rEff + fingerRadius);
+  }
+
+  function toPrint(x, y, z) {
+    return {
+      x: x * MODEL.S,
+      y: y * MODEL.S,
+      z: (MODEL.shellZTop - z) * MODEL.S
+    };
+  }
+
+  function pieceVolumeU3(piece) {
+    if (piece.kind === "halfEllipsoid") {
+      return (2 / 3) * Math.PI * piece.axes[0] * piece.axes[1] * piece.axes[2];
+    }
+    if (piece.type === "ellipsoid") {
+      return (4 / 3) * Math.PI * piece.a[0] * piece.a[1] * piece.a[2];
+    }
+    if (piece.type === "capsule") {
+      const L = distance3(piece.p0, piece.p1);
+      return Math.PI * piece.r * piece.r * L + (4 / 3) * Math.PI * piece.r * piece.r * piece.r;
+    }
+    return 0;
+  }
+
+  function pieceCentroidPrint(piece) {
+    if (piece.kind === "halfEllipsoid") {
+      return toPrint(piece.center[0], piece.center[1], piece.center[2] + (3 * piece.axes[2]) / 8);
+    }
+    if (piece.type === "ellipsoid") {
+      return toPrint(piece.c[0], piece.c[1], piece.c[2]);
+    }
+    const mid = [
+      (piece.p0[0] + piece.p1[0]) / 2,
+      (piece.p0[1] + piece.p1[1]) / 2,
+      (piece.p0[2] + piece.p1[2]) / 2
+    ];
+    return toPrint(mid[0], mid[1], mid[2]);
+  }
+
+  function fillHero() {
+    const finger10 = supports.find(item => item.key === "finger-10");
+    document.getElementById("summaryCmRel").textContent = `${fmtTuple([cmRel.x, cmRel.y, cmRel.z])} mm`;
+    document.getElementById("summaryVolume").textContent = `${MODEL.volumeCm3.toFixed(3)} cm3`;
+    document.getElementById("summaryOffset").textContent = `${offsetXY.toFixed(3)} mm`;
+    document.getElementById("summaryVertical").textContent = `${cmRel.z.toFixed(3)} < ${rEff.toFixed(1)} mm`;
+    document.getElementById("summaryNote").innerHTML =
+      `La conclusion rapida es esta: la proyeccion horizontal del centro de masa queda a <b>${offsetXY.toFixed(3)} mm</b> del apoyo, y su altura es <b>${cmRel.z.toFixed(3)} mm</b>, muy por debajo de <b>R_eff = ${rEff.toFixed(1)} mm</b>. Incluso sobre un dedo de 10 mm sigue habiendo margen <b>${finger10.margin > 0 ? "+" : ""}${finger10.margin.toFixed(3)} mm</b>.`;
+
+    document.getElementById("metricOffset").textContent = `${offsetXY.toFixed(3)} mm`;
+    document.getElementById("metricZcm").textContent = `${cmRel.z.toFixed(3)} mm`;
+    document.getElementById("metricReff").textContent = `${rEff.toFixed(1)} mm`;
+    document.getElementById("metricFinger10").textContent = `${finger10.margin > 0 ? "+" : ""}${finger10.margin.toFixed(3)} mm`;
+  }
+
+  function fillReadouts() {
+    document.getElementById("readoutSupport").textContent = fmtTuple([supportPoint.x, supportPoint.y, supportPoint.z]);
+    document.getElementById("readoutCmAbs").textContent = `${fmtTuple([cmAbs.x, cmAbs.y, cmAbs.z])} mm`;
+    document.getElementById("readoutCmRel").textContent = `${fmtTuple([cmRel.x, cmRel.y, cmRel.z])} mm`;
+    document.getElementById("readoutVolume").textContent = `${MODEL.volumeCm3.toFixed(3)} cm3`;
+  }
+
+  function fillInlineMath() {
+    document.getElementById("cmRelInline").textContent = `${cmRel.x.toFixed(3)}, ${cmRel.y.toFixed(3)}, ${cmRel.z.toFixed(3)} mm`;
+    document.getElementById("shellVolumeInline").textContent = `${shellVolumeU3.toFixed(4)} u^3 = ${shellVolumeCm3.toFixed(3)} cm3`;
+    document.getElementById("shellCentroidInline").textContent = `${shellCentroidRelZ.toFixed(3)} mm`;
+    document.getElementById("exactResultInline").textContent =
+      `CM_rel = (${cmRel.x.toFixed(3)}, ${cmRel.y.toFixed(3)}, ${cmRel.z.toFixed(3)}) mm y V = ${MODEL.volumeCm3.toFixed(3)} cm3`;
+    document.getElementById("offsetInline").textContent = `${offsetXY.toFixed(3)} mm`;
+    document.getElementById("rEffInline").textContent = `${rEff.toFixed(2)} mm`;
+  }
+
+  function fillPieceTable() {
+    const tbody = document.getElementById("pieceTableBody");
+    let totalVolumeU3 = 0;
+    let sumX = 0;
+    let sumZ = 0;
+
+    approxPieces.forEach(piece => {
+      const vU3 = pieceVolumeU3(piece);
+      const vCm3 = u3ToCm3(vU3);
+      const center = pieceCentroidPrint(piece);
+      const xRel = center.x - supportPoint.x;
+      const zRel = center.z;
+      const moment = vCm3 * xRel;
+
+      totalVolumeU3 += vU3;
+      sumX += vU3 * xRel;
+      sumZ += vU3 * zRel;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${piece.name}</td>
+        <td>${piece.typeLabel}</td>
+        <td class="mono">${vCm3.toFixed(3)} cm3</td>
+        <td class="mono ${xRel >= 0 ? "pos" : "neg"}">${xRel >= 0 ? "+" : ""}${xRel.toFixed(3)} mm</td>
+        <td class="mono">${zRel.toFixed(3)} mm</td>
+        <td class="mono ${moment >= 0 ? "pos" : "neg"}">${moment >= 0 ? "+" : ""}${moment.toFixed(3)}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    const approxVolumeCm3 = u3ToCm3(totalVolumeU3);
+    const approxCmRelX = sumX / totalVolumeU3;
+    const approxCmRelZ = sumZ / totalVolumeU3;
+
+    const totalRow = document.createElement("tr");
+    totalRow.innerHTML = `
+      <td><strong>Total aprox.</strong></td>
+      <td>Sin restar solapes</td>
+      <td class="mono"><strong>${approxVolumeCm3.toFixed(3)} cm3</strong></td>
+      <td class="mono"><strong>${approxCmRelX >= 0 ? "+" : ""}${approxCmRelX.toFixed(3)} mm</strong></td>
+      <td class="mono"><strong>${approxCmRelZ.toFixed(3)} mm</strong></td>
+      <td class="mono"><strong>-</strong></td>
+    `;
+    tbody.appendChild(totalRow);
+
+    document.getElementById("approxSummary").innerHTML =
+      `<strong>Lectura de la tabla:</strong> sin corregir los solapes, la suma didactica da un centro de masa aproximado de <b>(${approxCmRelX.toFixed(3)}, 0.000, ${approxCmRelZ.toFixed(3)}) mm</b> respecto al apoyo. El calculo exacto del modelo completo da <b>(${cmRel.x.toFixed(3)}, ${cmRel.y.toFixed(3)}, ${cmRel.z.toFixed(3)}) mm</b>. La diferencia es pequena y confirma la intuicion: la cabeza y las aletas delanteras empujan hacia delante, mientras caparazon, patas y cola compensan.`;
+  }
+
+  function fillStabilityTable() {
+    const tbody = document.getElementById("stabilityTableBody");
+    supports.forEach(item => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${item.label}</td>
+        <td class="mono">${item.radiusLabel} = ${item.radius.toFixed(3)} mm</td>
+        <td class="mono">${cmRel.z.toFixed(3)} &lt; ${item.radius.toFixed(3)}</td>
+        <td class="${item.margin > 0 ? "ok" : "warn"} mono">${item.margin > 0 ? "+" : ""}${item.margin.toFixed(3)} mm</td>
+        <td>${item.readout}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function buildViewer() {
+    const canvas = document.getElementById("scene");
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0xffffff, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.5, 1200);
+    camera.up.set(0, 0, 1);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    const key = new THREE.DirectionalLight(0xffffff, 0.95);
+    key.position.set(55, 25, 78);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0xc2f3de, 0.38);
+    fill.position.set(-70, -50, 35);
+    scene.add(fill);
+
+    const materials = {
+      mesh: new THREE.MeshStandardMaterial({
+        color: 0x76b38b,
+        roughness: 0.58,
+        metalness: 0.02
+      }),
+      cm: new THREE.MeshStandardMaterial({
+        color: 0x1d9b66,
+        emissive: 0x0f4d33,
+        emissiveIntensity: 0.55
+      }),
+      proj: new THREE.MeshStandardMaterial({
+        color: 0x3d7cff,
+        emissive: 0x1a3166,
+        emissiveIntensity: 0.45
+      }),
+      contact: new THREE.MeshStandardMaterial({
+        color: 0xd9922a,
+        emissive: 0x6a3d00,
+        emissiveIntensity: 0.45
+      }),
+      guide: new THREE.LineBasicMaterial({
+        color: 0x456f64,
+        transparent: true,
+        opacity: 0.55
+      }),
+      plumb: new THREE.LineDashedMaterial({
+        color: 0x3d7cff,
+        dashSize: 1.15,
+        gapSize: 0.8,
+        transparent: true,
+        opacity: 0.7
+      }),
+      table: new THREE.MeshStandardMaterial({
+        color: 0xf0ece0,
+        roughness: 0.98,
+        metalness: 0.01,
+        side: THREE.DoubleSide
+      }),
+      finger: new THREE.MeshStandardMaterial({
+        color: 0xc7976c,
+        roughness: 0.88,
+        metalness: 0.01
+      })
+    };
+
+    const groups = {
+      mesh: new THREE.Group(),
+      cm: new THREE.Group(),
+      contact: new THREE.Group(),
+      projection: new THREE.Group(),
+      plumb: new THREE.Group(),
+      table: new THREE.Group(),
+      finger: new THREE.Group()
+    };
+    Object.values(groups).forEach(group => scene.add(group));
+
+    const stlGeometry = parseBinarySTLFromBase64(window.TORTUGA_V2_STL_B64);
+    const stlMesh = new THREE.Mesh(stlGeometry, materials.mesh);
+    stlMesh.castShadow = false;
+    stlMesh.receiveShadow = false;
+    groups.mesh.add(stlMesh);
+
+    const edgeLines = new THREE.LineSegments(
+      new THREE.EdgesGeometry(stlGeometry, 28),
+      new THREE.LineBasicMaterial({
+        color: 0x3f6d57,
+        transparent: true,
+        opacity: 0.18
+      })
+    );
+    groups.mesh.add(edgeLines);
+
+    const table = new THREE.Mesh(new THREE.PlaneGeometry(230, 180), materials.table);
+    table.position.z = 0;
+    groups.table.add(table);
+
+    const grid = new THREE.GridHelper(220, 16, 0xc3d6cc, 0xe0e8e3);
+    grid.rotation.x = Math.PI / 2;
+    grid.position.z = 0.05;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.68;
+    groups.table.add(grid);
+
+    const cmPos = new THREE.Vector3(cmAbs.x, cmAbs.y, cmAbs.z);
+    const contactPos = new THREE.Vector3(supportPoint.x, supportPoint.y, 0);
+    const projPos = new THREE.Vector3(cmAbs.x, cmAbs.y, 0);
+
+    const cmSphere = new THREE.Mesh(new THREE.SphereGeometry(1.9, 24, 18), materials.cm);
+    cmSphere.position.copy(cmPos);
+    groups.cm.add(cmSphere);
+
+    const projSphere = new THREE.Mesh(new THREE.SphereGeometry(1.45, 24, 18), materials.proj);
+    projSphere.position.copy(projPos);
+    groups.projection.add(projSphere);
+
+    const contactSphere = new THREE.Mesh(new THREE.SphereGeometry(1.75, 24, 18), materials.contact);
+    contactSphere.position.copy(contactPos);
+    groups.contact.add(contactSphere);
+
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(4.6, 0.34, 10, 44),
+      new THREE.MeshBasicMaterial({ color: 0xd9922a, transparent: true, opacity: 0.38 })
+    );
+    ring.position.copy(contactPos);
+    ring.rotation.x = Math.PI / 2;
+    groups.contact.add(ring);
+
+    const verticalGeo = new THREE.BufferGeometry().setFromPoints([projPos.clone(), cmPos.clone()]);
+    const plumb = new THREE.Line(verticalGeo, materials.plumb);
+    plumb.computeLineDistances();
+    groups.plumb.add(plumb);
+
+    const axisGeo = new THREE.BufferGeometry().setFromPoints([contactPos.clone(), new THREE.Vector3(contactPos.x, contactPos.y, cmPos.z + 8)]);
+    groups.plumb.add(new THREE.Line(axisGeo, materials.guide));
+
+    const groundGeo = new THREE.BufferGeometry().setFromPoints([contactPos.clone(), projPos.clone()]);
+    const groundLine = new THREE.Line(groundGeo, new THREE.LineDashedMaterial({
+      color: 0xc58e42,
+      dashSize: 0.9,
+      gapSize: 0.55,
+      transparent: true,
+      opacity: 0.72
+    }));
+    groundLine.computeLineDistances();
+    groups.plumb.add(groundLine);
+
+    const fingerMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(10, 10, 96, 42, 1, false),
+      materials.finger
+    );
+    fingerMesh.rotation.z = Math.PI / 2;
+    groups.finger.add(fingerMesh);
+
+    const fingerGuide = new THREE.Mesh(
+      new THREE.TorusGeometry(10, 0.22, 10, 54),
+      new THREE.MeshBasicMaterial({ color: 0xc7976c, transparent: true, opacity: 0.22 })
+    );
+    fingerGuide.position.copy(contactPos);
+    fingerGuide.rotation.y = Math.PI / 2;
+    groups.finger.add(fingerGuide);
+
+    const sceneTarget = new THREE.Vector3(contactPos.x, 0, 5.2);
+    let theta = 0.62;
+    let phi = 0.96;
+    let radius = 122;
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function resize() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    function updateCamera() {
+      camera.position.set(
+        sceneTarget.x + radius * Math.sin(phi) * Math.cos(theta),
+        sceneTarget.y + radius * Math.sin(phi) * Math.sin(theta),
+        sceneTarget.z + radius * Math.cos(phi)
+      );
+      camera.lookAt(sceneTarget);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    updateCamera();
+
+    canvas.addEventListener("mousedown", e => {
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+
+    window.addEventListener("mouseup", () => {
+      dragging = false;
+    });
+
+    window.addEventListener("mousemove", e => {
+      if (!dragging) return;
+      theta += (e.clientX - lastX) * 0.0085;
+      phi += (e.clientY - lastY) * 0.0085;
+      phi = Math.max(0.14, Math.min(Math.PI - 0.14, phi));
+      lastX = e.clientX;
+      lastY = e.clientY;
+      updateCamera();
+    });
+
+    canvas.addEventListener("wheel", e => {
+      radius = Math.max(60, Math.min(250, radius + e.deltaY * 0.05));
+      updateCamera();
+      e.preventDefault();
+    }, { passive: false });
+
+    const toggles = {
+      mesh: document.getElementById("tgl-mesh"),
+      cm: document.getElementById("tgl-cm"),
+      contact: document.getElementById("tgl-contact"),
+      project: document.getElementById("tgl-project"),
+      plumb: document.getElementById("tgl-plumb")
+    };
+
+    Object.entries(toggles).forEach(([key, input]) => {
+      input.addEventListener("change", () => {
+        if (key === "project") {
+          groups.projection.visible = input.checked;
+        } else {
+          groups[key].visible = input.checked;
+        }
+      });
+    });
+
+    const buttons = Array.from(document.querySelectorAll(".mode-btn"));
+    const supportReadout = document.getElementById("supportReadout");
+    const viewerModeLabel = document.getElementById("viewerModeLabel");
+
+    function setMode(mode, fingerRadius) {
+      buttons.forEach(button => {
+        const matchMode = button.dataset.mode === mode;
+        const matchRadius = mode === "finger" ? Number(button.dataset.radius) === fingerRadius : true;
+        button.classList.toggle("active", matchMode && matchRadius);
+      });
+
+      if (mode === "table") {
+        groups.table.visible = true;
+        groups.finger.visible = false;
+        viewerModeLabel.textContent = "Mesa plana";
+        supportReadout.innerHTML = `
+          <b>Mesa plana</b><br>
+          Aqui manda la comparacion <b>z_CM &lt; R_eff</b>: <b>${cmRel.z.toFixed(3)} &lt; ${rEff.toFixed(3)} mm</b>.<br>
+          Ademas, la proyeccion horizontal del CM queda a solo <b>${offsetXY.toFixed(3)} mm</b> del apoyo.
+        `;
+        drawGauge("table", 0);
+        return;
+      }
+
+      const rComb = combinedRadius(fingerRadius);
+      const margin = rComb - cmRel.z;
+      groups.table.visible = false;
+      groups.finger.visible = true;
+      fingerMesh.geometry.dispose();
+      fingerMesh.geometry = new THREE.CylinderGeometry(fingerRadius, fingerRadius, 96, 42, 1, false);
+      fingerMesh.rotation.z = Math.PI / 2;
+      fingerMesh.position.set(contactPos.x, contactPos.y, -fingerRadius);
+
+      fingerGuide.geometry.dispose();
+      fingerGuide.geometry = new THREE.TorusGeometry(fingerRadius, 0.22, 10, 54);
+      fingerGuide.position.copy(contactPos);
+      fingerGuide.rotation.y = Math.PI / 2;
+
+      viewerModeLabel.textContent = `Dedo ${fingerRadius} mm`;
+      supportReadout.innerHTML = `
+        <b>Dedo de radio ${fingerRadius} mm</b><br>
+        La curvatura util ahora es <b>R_comb = ${rComb.toFixed(3)} mm</b>.<br>
+        El margen queda en <b class="${margin > 0 ? "ok" : "warn"}">${margin > 0 ? "+" : ""}${margin.toFixed(3)} mm</b>.
+      `;
+      drawGauge("finger", fingerRadius);
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        setMode(button.dataset.mode, Number(button.dataset.radius || 0));
+      });
+    });
+
+    setMode("table", 0);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      ring.material.opacity = 0.28 + 0.1 * Math.sin(Date.now() * 0.0032);
+      edgeLines.material.opacity = 0.14 + 0.05 * Math.sin(Date.now() * 0.0016);
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  }
+
+  function parseBinarySTLFromBase64(base64) {
+    if (!base64) {
+      throw new Error("No se encontro la malla STL exacta del modelo v2.");
+    }
+
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    const view = new DataView(bytes.buffer);
+    const triangleCount = view.getUint32(80, true);
+    const positions = new Float32Array(triangleCount * 9);
+    let readOffset = 84;
+    let writeOffset = 0;
+
+    for (let i = 0; i < triangleCount; i++) {
+      readOffset += 12;
+      for (let j = 0; j < 9; j++) {
+        positions[writeOffset++] = view.getFloat32(readOffset, true);
+        readOffset += 4;
+      }
+      readOffset += 2;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+    geometry.computeBoundingSphere();
+    return geometry;
+  }
+
+  function drawMicro() {
+    const canvas = document.getElementById("micro");
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const scale = 135;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    ctx.strokeStyle = "rgba(25, 48, 42, 0.08)";
+    ctx.lineWidth = 1;
+    for (let i = -4; i <= 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-150, i * 30);
+      ctx.lineTo(150, i * 30);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(i * 30, -150);
+      ctx.lineTo(i * 30, 150);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "rgba(61, 124, 255, 0.22)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, offsetXY * scale, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = "#d9922a";
+    ctx.beginPath();
+    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#3d7cff";
+    ctx.beginPath();
+    ctx.arc(cmRel.x * scale, -cmRel.y * scale, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#c9862d";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(cmRel.x * scale, -cmRel.y * scale);
+    ctx.stroke();
+
+    ctx.fillStyle = "#19302a";
+    ctx.font = "12px ui-monospace, Menlo, monospace";
+    ctx.fillText("apoyo", 12, -10);
+    ctx.fillText("proy CM", cmRel.x * scale + 12, -cmRel.y * scale - 10);
+    ctx.fillText(`dx = ${cmRel.x.toFixed(3)} mm`, -126, 126);
+    ctx.fillText(`dy = ${cmRel.y.toFixed(3)} mm`, -126, 144);
+    ctx.fillText(`offset = ${offsetXY.toFixed(3)} mm`, -126, 162);
+    ctx.restore();
+  }
+
+  function drawGauge(mode, fingerRadius) {
+    const canvas = document.getElementById("gauge");
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    const padding = 36;
+    const radiusValue = mode === "table" ? rEff : combinedRadius(fingerRadius);
+    const topValue = Math.max(radiusValue * 1.1, cmRel.z * 1.25, 12);
+    const barX = 92;
+    const barY = 28;
+    const barH = h - 54;
+    const barW = 26;
+
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.strokeStyle = "rgba(25, 48, 42, 0.10)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, h - 26);
+    ctx.lineTo(w - padding, h - 26);
+    ctx.stroke();
+
+    ctx.fillStyle = "#eef4f0";
+    roundRect(ctx, barX, barY, barW, barH, 14);
+    ctx.fill();
+
+    const radiusY = barY + barH - (radiusValue / topValue) * barH;
+    const cmY = barY + barH - (cmRel.z / topValue) * barH;
+
+    ctx.fillStyle = "rgba(27, 123, 114, 0.16)";
+    roundRect(ctx, barX, radiusY, barW, barY + barH - radiusY, 14);
+    ctx.fill();
+
+    ctx.strokeStyle = "#1b7b72";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(barX - 10, radiusY);
+    ctx.lineTo(barX + barW + 90, radiusY);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#c9862d";
+    ctx.beginPath();
+    ctx.moveTo(barX - 10, cmY);
+    ctx.lineTo(barX + barW + 90, cmY);
+    ctx.stroke();
+
+    ctx.fillStyle = "#1d9b66";
+    ctx.beginPath();
+    ctx.arc(barX + barW / 2, cmY, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#19302a";
+    ctx.font = "12px ui-monospace, Menlo, monospace";
+    ctx.fillText("z = 0 (apoyo)", barX + 42, h - 20);
+    ctx.fillText(`${mode === "table" ? "R_eff" : "R_comb"} = ${radiusValue.toFixed(3)} mm`, barX + 42, radiusY - 8);
+    ctx.fillText(`z_CM = ${cmRel.z.toFixed(3)} mm`, barX + 42, cmY - 8);
+    ctx.fillText(mode === "table" ? "Mesa plana" : `Dedo ${fingerRadius} mm`, barX + 42, 26);
+
+    const margin = radiusValue - cmRel.z;
+    ctx.fillStyle = margin > 0 ? "#1d9b66" : "#b4563f";
+    ctx.font = "bold 13px Avenir Next, Trebuchet MS, sans-serif";
+    ctx.fillText(`Margen: ${margin > 0 ? "+" : ""}${margin.toFixed(3)} mm`, barX + 42, cmY + 20);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+})();
+</script>
+</body>
+</html>

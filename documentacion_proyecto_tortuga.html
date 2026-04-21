@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tortuga 3D — Balance en la punta de la cabeza</title>
+  <title>Tortuga 3D — Balance en el caparazón</title>
   <style>
     /* ── RESET & BASE ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -617,11 +617,11 @@
   <!-- HERO -->
   <section class="hero" id="inicio">
     <div class="hero-eyebrow">Cálculo 2 + Impresión 3D · Universidad</div>
-    <h1>Tortuga 3D equilibrada<br><em>sobre la punta de la cabeza</em></h1>
+    <h1>Tortuga 3D equilibrada<br><em>sobre el caparazón</em></h1>
     <p class="hero-sub">
       Usando integrales dobles y triples calibramos la distribución de masa para que la proyección
-      del centro de masa caiga exactamente sobre el punto de apoyo — con un error de solo
-      <strong style="color:var(--text)">0.010 mm</strong>.
+      del centro de masa caiga exactamente sobre el ápex del caparazón — con un error de solo
+      <strong style="color:var(--text)">0.008 mm</strong>.
     </p>
 
     <div class="metrics-row">
@@ -631,7 +631,7 @@
       </div>
       <div class="metric-pill">
         <div class="val amber" id="cnt-reff">0.0</div>
-        <div class="lbl">mm · Radio efectivo R_eff</div>
+        <div class="lbl">mm · R_eff cúpula caparazón</div>
       </div>
       <div class="metric-pill">
         <div class="val teal" id="cnt-angle">0.0</div>
@@ -647,7 +647,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
-      ESTABLE en mesa plana · punta del dedo · punta de lápiz
+      ESTABLE en mesa plana · punta del dedo · cualquier superficie
     </div>
 
     <div style="margin-top: 48px;">
@@ -674,7 +674,7 @@
         <div class="step">
           <div class="step-num">1</div>
           <h3>Modelo 2D</h3>
-          <p>Integrales dobles sobre una lámina plana para entender cómo mover el centroide hacia la cabeza.</p>
+          <p>Integrales dobles sobre una lámina plana para entender cómo posicionar el centroide sobre el caparazón.</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
@@ -684,12 +684,12 @@
         <div class="step">
           <div class="step-num">3</div>
           <h3>Calibración</h3>
-          <p>Búsqueda binaria sobre <code style="color:var(--code)">front_lobe_scale</code> hasta que el CM quede sobre la punta.</p>
+          <p>Búsqueda binaria sobre <code style="color:var(--code)">front_lobe_scale</code> hasta que el CM quede sobre el ápex del caparazón.</p>
         </div>
         <div class="step">
           <div class="step-num">4</div>
           <h3>Estabilidad</h3>
-          <p>Verificar z_CM &lt; R_eff para que la tortuga sea auto-centrante en cualquier superficie.</p>
+          <p>Verificar z_CM &lt; R_eff con la curvatura natural del caparazón — sin disco adicional.</p>
         </div>
       </div>
     </div>
@@ -701,62 +701,290 @@
   <section id="calculo" class="reveal">
     <div class="section-label"><span></span>Matemáticas del proyecto</div>
     <h2>Centro de masa: de 2D a 3D</h2>
+    <p>El núcleo del proyecto es calcular (x̄, ȳ, z̄) — el punto donde se concentra
+       toda la masa — y hacer que caiga exactamente sobre el ápex del caparazón.
+       Se recorre el camino completo: integrales dobles → integrales triples → Monte Carlo.</p>
+    <p style="max-width:900px;">La idea física que guía todo el proceso es muy simple:
+       <strong>el centro de masa debe quedar justo encima del punto de apoyo</strong>.
+       Si la proyección vertical del CM cae sobre el apoyo, no aparece torque lateral.
+       Si cae corrida hacia delante, atrás o a un lado, la tortuga gira en esa dirección.
+       Por eso primero calculamos el CM con integrales y después lo comparamos con el punto
+       real de contacto del caparazón.</p>
 
     <div class="timeline" style="margin-top: 28px;">
 
       <div class="tl-item">
         <h3>Paso 1 · Modelo 2D — Integrales dobles</h3>
-        <p>La lámina simplificada combina regiones geométricas básicas: una elipse (caparazón),
-           círculos (cabeza, lóbulos frontales), triángulos (hocico, cola, aletas).
-           Con densidad superficial constante σ:</p>
+        <p>Se parte de una lámina plana con densidad superficial uniforme σ. Las regiones son:</p>
+        <p>• Elipse (caparazón): semi-ejes a₁, b₁ → ∬ elipse dA = π a₁ b₁</p>
+        <p>• Círculo (cabeza): radio r_h → ∬ círculo dA = π r_h²</p>
+        <p>• Elipse (lóbulo frontal, ×2): ∬ dA = π a_f b_f, con a_f = 1.18·s, b_f = 0.78·s</p>
         <div class="formula-block">
-          <div class="f-row"><span class="f-lhs">A(r)</span><span class="f-rhs">= ∬_R dA</span><span class="f-comment">← área total de la lámina</span></div>
-          <div class="f-row"><span class="f-lhs">Mx(r)</span><span class="f-rhs">= ∬_R x dA</span><span class="f-comment">← momento respecto al eje y</span></div>
-          <div class="f-row"><span class="f-lhs">My(r)</span><span class="f-rhs">= ∬_R y dA = 0</span><span class="f-comment">← simetría eje longitudinal</span></div>
-          <div class="f-row"><span class="f-lhs">x̄(r)</span><span class="f-rhs">= Mx(r) / A(r)</span><span class="f-comment">← centroide a llevar a x = 0</span></div>
+          <div class="f-row"><span class="f-lhs">A(s)</span><span class="f-rhs">= ∬_R dA = Σᵢ Aᵢ</span><span class="f-comment">← área total (suma de regiones)</span></div>
+          <div class="f-row"><span class="f-lhs">Mₓ(s)</span><span class="f-rhs">= ∬_R x dA = Σᵢ x̄ᵢ Aᵢ</span><span class="f-comment">← momento en x (suma ponderada)</span></div>
+          <div class="f-row"><span class="f-lhs">Mᵧ(s)</span><span class="f-rhs">= ∬_R y dA = 0</span><span class="f-comment">← cero por simetría bilateral</span></div>
+          <div class="f-row"><span class="f-lhs">x̄(s)</span><span class="f-rhs">= Mₓ(s) / A(s)</span><span class="f-comment">← centroide 2D en función de s</span></div>
         </div>
         <div class="highlight-box green">
-          <p><strong>Objetivo 2D:</strong> ajustar el radio r de los lóbulos frontales hasta que x̄(r) = 0.
-             Eso equivale a resolver <code style="color:var(--code)">Mx(r) = 0</code> — el momento neto debe ser cero.</p>
+          <p><strong>Ecuación a resolver:</strong> &nbsp; Mₓ(s) − x_cap · A(s) = 0, &nbsp; con x_cap = −26.4 mm.<br>
+          El primer momento Mₓ y el área A son integrales dobles exactas sobre regiones elípticas y circulares. Encontrar s tal que el centroide coincide con el ápex del caparazón.</p>
+        </div>
+      </div>
+
+      <!-- ── PASO 1.5 ── -->
+      <div class="tl-item">
+        <h3>Paso 1.5 · Coordenadas cilíndricas — solución analítica del cuello</h3>
+        <p>El cuello es una <strong>cápsula</strong>: cilindro + dos tapas hemisféricas.
+           Con coordenadas cilíndricas (ρ, θ, ℓ) alineadas al eje de la cápsula se puede
+           calcular su volumen y centroide de forma exacta, igual que los ejercicios de clase.</p>
+
+        <div class="formula-block" style="margin-top:18px; margin-bottom:14px;">
+          <div class="f-row" style="font-size:0.82rem; color:var(--muted);">
+            <span class="f-lhs" style="min-width:110px;">Datos del cuello</span>
+            <span class="f-rhs">p₀ = (−1.55, 0, 0.72) u &nbsp;→&nbsp; p₁ = (−0.55, 0, 0.40) u &nbsp;|&nbsp; r = 0.25 u</span>
+          </div>
+          <div class="f-row" style="font-size:0.82rem; color:var(--muted);">
+            <span class="f-lhs" style="min-width:110px;">Longitud del eje</span>
+            <span class="f-rhs">L = √(1.00² + 0.32²) = √1.1024 ≈ 1.05 u = 11.55 mm</span>
+          </div>
+        </div>
+
+        <!-- Integral cilindro -->
+        <p style="margin-bottom:6px; color:var(--text); font-size:0.9rem;"><strong>① Parte cilíndrica</strong> — coordenadas cilíndricas (como en clase):</p>
+        <div class="formula-block">
+          <div class="f-row">
+            <span class="f-lhs">V_cil</span>
+            <span class="f-rhs">= ∫₀²π ∫₀ʳ ∫₀ᴸ ρ dℓ dρ dθ</span>
+            <span class="f-comment">← Jacobiano = ρ</span>
+          </div>
+          <div class="f-row">
+            <span class="f-lhs"></span>
+            <span class="f-rhs">= ∫₀²π dθ · ∫₀ʳ ρ dρ · ∫₀ᴸ dℓ</span>
+            <span class="f-comment">← variables separables</span>
+          </div>
+          <div class="f-row">
+            <span class="f-lhs"></span>
+            <span class="f-rhs">= 2π · [ρ²/2]₀ʳ · L = πr²L</span>
+            <span class="f-comment">← Teorema Fundamental</span>
+          </div>
+          <div class="f-row" style="margin-top:4px;">
+            <span class="f-lhs">V_cil</span>
+            <span class="f-rhs">= π (0.25)² (1.05) <strong style="color:var(--green)">≈ 0.2062 u³</strong></span>
+            <span class="f-comment">← 274.4 mm³</span>
+          </div>
+        </div>
+
+        <!-- Integral tapas -->
+        <p style="margin-bottom:6px; margin-top:14px; color:var(--text); font-size:0.9rem;"><strong>② Tapas hemisféricas</strong> — sustitución u = r²−ρ²:</p>
+        <div class="formula-block">
+          <div class="f-row">
+            <span class="f-lhs">V_tapas</span>
+            <span class="f-rhs">= 2 · ∫₀²π ∫₀ʳ ∫₀^√(r²−ρ²) ρ dz dρ dθ</span>
+            <span class="f-comment">← dos semiesferas</span>
+          </div>
+          <div class="f-row">
+            <span class="f-lhs"></span>
+            <span class="f-rhs">= 4π ∫₀ʳ ρ√(r²−ρ²) dρ</span>
+            <span class="f-comment">← u = r²−ρ², du = −2ρ dρ</span>
+          </div>
+          <div class="f-row">
+            <span class="f-lhs"></span>
+            <span class="f-rhs">= 4π · [−⅓(r²−ρ²)^(3/2)]₀ʳ = (4/3)πr³</span>
+            <span class="f-comment">← esfera completa</span>
+          </div>
+          <div class="f-row" style="margin-top:4px;">
+            <span class="f-lhs">V_tapas</span>
+            <span class="f-rhs">= (4/3)π (0.25)³ <strong style="color:var(--green)">≈ 0.0654 u³</strong></span>
+            <span class="f-comment">← 87.1 mm³</span>
+          </div>
+        </div>
+
+        <!-- Total y centroide -->
+        <div class="formula-block" style="margin-top:12px; border-color: rgba(74,180,100,0.35);">
+          <div class="f-row">
+            <span class="f-lhs">V_cuello</span>
+            <span class="f-rhs">= V_cil + V_tapas = πr²L + (4/3)πr³</span>
+            <span class="f-comment">← fórmula exacta de la cápsula</span>
+          </div>
+          <div class="f-row">
+            <span class="f-lhs">V_cuello</span>
+            <span class="f-rhs">= 0.2062 + 0.0654 = <strong style="color:var(--amber)">0.2716 u³ = 361.5 mm³</strong></span>
+            <span class="f-comment">← resultado analítico exacto</span>
+          </div>
+          <div class="f-row" style="margin-top:6px;">
+            <span class="f-lhs">x̄_cuello</span>
+            <span class="f-rhs">= (−1.55 + (−0.55)) / 2 = <strong style="color:var(--amber)">−1.05 u = −11.55 mm</strong></span>
+            <span class="f-comment">← simetría de la cápsula sobre su eje</span>
+          </div>
+        </div>
+
+        <div class="highlight-box amber" style="margin-top:18px;">
+          <p><strong>¿Por qué no basta esto para toda la tortuga?</strong><br>
+          Este método funciona perfectamente para <em>una pieza</em>. El problema aparece con la <strong>unión de 12 piezas</strong>:
+          la intersección entre la cápsula del cuello y la elipsoide del caparazón no tiene límites
+          de integración expresables en ningún sistema de coordenadas — exactamente el problema de
+          las regiones Tipo I y Tipo II pero en 3D y con geometría orgánica.
+          Eso obliga al Monte Carlo.</p>
         </div>
       </div>
 
       <div class="tl-item">
         <h3>Paso 2 · Modelo 3D — Integrales triples y Monte Carlo</h3>
-        <p>La pieza real está definida por una función característica χ_T que vale 1 dentro de la
-           tortuga y 0 afuera. Se evalúa sobre millones de puntos aleatorios en la caja contenedora:</p>
+        <p>La geometría orgánica 3D no tiene solución analítica cerrada. Se define la función
+           característica χ_T(x,y,z) de la unión de elipsoides y cápsulas, y se evalúan las
+           integrales triples por el método de Monte Carlo:</p>
         <div class="formula-block">
-          <div class="f-row"><span class="f-lhs">V</span><span class="f-rhs">= ∭ χ_T(x,y,z) dV</span><span class="f-comment">← volumen total de la pieza</span></div>
-          <div class="f-row"><span class="f-lhs">Mx</span><span class="f-rhs">= ∭ x · χ_T dV</span></div>
-          <div class="f-row"><span class="f-lhs">My</span><span class="f-rhs">= ∭ y · χ_T dV</span></div>
-          <div class="f-row"><span class="f-lhs">Mz</span><span class="f-rhs">= ∭ z · χ_T dV</span></div>
-          <div class="f-row"><span class="f-lhs">x̄, ȳ, z̄</span><span class="f-rhs">= Mx/V , My/V , Mz/V</span><span class="f-comment">← centro de masa 3D</span></div>
+          <div class="f-row"><span class="f-lhs">V</span><span class="f-rhs">= ∭_Ω χ_T dV</span><span class="f-comment">← volumen por integración de χ_T</span></div>
+          <div class="f-row"><span class="f-lhs">Mₓ</span><span class="f-rhs">= ∭_Ω x · χ_T dV</span><span class="f-comment">← primer momento en x</span></div>
+          <div class="f-row"><span class="f-lhs">Mᵧ</span><span class="f-rhs">= ∭_Ω y · χ_T dV ≈ 0</span><span class="f-comment">← cero por simetría</span></div>
+          <div class="f-row"><span class="f-lhs">Mz</span><span class="f-rhs">= ∭_Ω z · χ_T dV</span><span class="f-comment">← primer momento en z</span></div>
+          <div class="f-row"><span class="f-lhs">x̄, ȳ, z̄</span><span class="f-rhs">= Mₓ/V , Mᵧ/V , Mz/V</span><span class="f-comment">← centro de masa 3D</span></div>
+        </div>
+        <p style="font-size:0.87rem;">Monte Carlo: se generan N puntos (xᵢ, yᵢ, zᵢ) aleatorios uniformes en la caja contenedora Ω_box de volumen V_box. Las integrales se aproximan como:</p>
+        <div class="formula-block">
+          <div class="f-row"><span class="f-lhs">V</span><span class="f-rhs">≈ V_box · (1/N) Σᵢ χ_T(xᵢ,yᵢ,zᵢ)</span><span class="f-comment">← Ley de los Grandes Números</span></div>
+          <div class="f-row"><span class="f-lhs">x̄</span><span class="f-rhs">≈ [V_box · (1/N) Σᵢ xᵢ χ_T(xᵢ,yᵢ,zᵢ)] / V</span><span class="f-comment">← error ~ 1/√N</span></div>
+        </div>
+        <p style="font-size:0.87rem;">Con N = 3 000 000 puntos el error estándar es &lt; 0.02 mm. El script <code style="color:var(--code)">calculo_cm_montecarlo.py</code> implementa este cálculo.</p>
+      </div>
+
+      <div class="tl-item">
+        <h3>Paso 2.5 · ¿Qué significa cada integral, pero en palabras fáciles?</h3>
+
+        <div class="grid-2" style="margin-top:16px; gap:16px;">
+          <div style="background:rgba(74,180,100,0.08); border:1px solid rgba(74,180,100,0.22); border-radius:14px; padding:18px;">
+            <p style="color:var(--text); font-weight:700; margin-bottom:8px;">1) La región 3D que sí cuenta se llama T</p>
+            <p style="font-size:0.88rem; margin-bottom:10px;">
+              T es la tortuga completa: caparazón exterior, hueco interior restado, cuello,
+              cabeza, hocico, aletas, patas y cola. La función χ_T vale 1 si el punto está
+              dentro de la tortuga y 0 si está fuera.
+            </p>
+            <div class="formula-block">
+              <div class="f-row"><span class="f-lhs">χ_T(x,y,z)</span><span class="f-rhs">= 1 si (x,y,z) ∈ T</span><span class="f-comment">← el punto sí pertenece al sólido</span></div>
+              <div class="f-row"><span class="f-lhs"></span><span class="f-rhs">= 0 si (x,y,z) ∉ T</span><span class="f-comment">← el punto queda fuera y no aporta nada</span></div>
+            </div>
+            <p style="font-size:0.84rem; margin:0;">Eso convierte una geometría complicada en una regla binaria muy fácil:
+              cada punto del espacio o cuenta, o no cuenta.</p>
+          </div>
+
+          <div style="background:rgba(42,207,186,0.07); border:1px solid rgba(42,207,186,0.22); border-radius:14px; padding:18px;">
+            <p style="color:var(--text); font-weight:700; margin-bottom:8px;">2) El volumen y los momentos salen de sumar pequeños dV</p>
+            <p style="font-size:0.88rem; margin-bottom:10px;">
+              Cada pequeño trocito de volumen <strong>dV</strong> aporta masa. Si además ese trocito está
+              lejos en x, y o z, también aporta más momento respecto a ese eje.
+            </p>
+            <div class="formula-block">
+              <div class="f-row"><span class="f-lhs">V</span><span class="f-rhs">= ∭ χ_T dV</span><span class="f-comment">← suma de todos los pedacitos que sí están dentro</span></div>
+              <div class="f-row"><span class="f-lhs">Mₓ</span><span class="f-rhs">= ∭ x · χ_T dV</span><span class="f-comment">← más peso si el volumen está lejos en x</span></div>
+              <div class="f-row"><span class="f-lhs">Mz</span><span class="f-rhs">= ∭ z · χ_T dV</span><span class="f-comment">← más peso si el volumen está alto en z</span></div>
+            </div>
+            <p style="font-size:0.84rem; margin:0;">La integral triple no hace “magia”: solo suma todos esos aportes
+              pequeños de forma continua en las tres dimensiones.</p>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px; gap:16px;">
+          <div style="background:rgba(240,160,32,0.08); border:1px solid rgba(240,160,32,0.22); border-radius:14px; padding:18px;">
+            <p style="color:var(--text); font-weight:700; margin-bottom:8px;">3) El centro de masa es un promedio ponderado</p>
+            <p style="font-size:0.88rem; margin-bottom:10px;">
+              Después de obtener el volumen y los momentos, el CM aparece dividiendo:
+              momento / volumen. Esa división responde la pregunta:
+              “¿en qué punto equivaldría poner toda la masa junta?”.
+            </p>
+            <div class="formula-block">
+              <div class="f-row"><span class="f-lhs">x̄</span><span class="f-rhs">= Mₓ / V</span><span class="f-comment">← posición promedio de la masa en x</span></div>
+              <div class="f-row"><span class="f-lhs">ȳ</span><span class="f-rhs">= Mᵧ / V</span><span class="f-comment">← posición promedio de la masa en y</span></div>
+              <div class="f-row"><span class="f-lhs">z̄</span><span class="f-rhs">= Mz / V</span><span class="f-comment">← altura promedio de la masa</span></div>
+            </div>
+            <p style="font-size:0.84rem; margin:0;">Si añades volumen hacia la cabeza, x̄ se mueve hacia la cabeza.
+              Si añades volumen arriba del caparazón, z̄ sube.</p>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.10); border-radius:14px; padding:18px;">
+            <p style="color:var(--text); font-weight:700; margin-bottom:8px;">4) Monte Carlo: la integral se aproxima por muestreo</p>
+            <p style="font-size:0.88rem; margin-bottom:10px;">
+              En vez de resolver a mano una región 3D muy difícil, el programa toma millones de puntos
+              aleatorios dentro de una caja contenedora. Cada punto pregunta:
+              “¿estoy dentro de la tortuga o fuera?”.
+            </p>
+            <div class="formula-block">
+              <div class="f-row"><span class="f-lhs">Paso A</span><span class="f-rhs">Generar N puntos aleatorios en Ω_box</span><span class="f-comment">← caja que encierra toda la tortuga</span></div>
+              <div class="f-row"><span class="f-lhs">Paso B</span><span class="f-rhs">Evaluar χ_T en cada punto</span><span class="f-comment">← decidir si aporta o no aporta</span></div>
+              <div class="f-row"><span class="f-lhs">Paso C</span><span class="f-rhs">Promediar y multiplicar por V_box</span><span class="f-comment">← aproximar la integral triple</span></div>
+            </div>
+            <p style="font-size:0.84rem; margin:0;">Por eso el método es muy útil: convierte una integral imposible de
+              escribir con límites bonitos en un cálculo numérico robusto.</p>
+          </div>
+        </div>
+
+        <div class="highlight-box green" style="margin-top:16px;">
+          <p><strong>Lectura rápida del proceso completo:</strong><br>
+             1. Definimos la tortuga como una región 3D T.<br>
+             2. Construimos χ_T para saber si un punto pertenece o no al sólido.<br>
+             3. Integramos χ_T para obtener volumen y x·χ_T, y·χ_T, z·χ_T para obtener momentos.<br>
+             4. Dividimos momentos entre volumen y así salen (x̄, ȳ, z̄).<br>
+             5. Comparamos la proyección del CM con el punto real de apoyo para decidir si equilibra.</p>
         </div>
       </div>
 
       <div class="tl-item">
-        <h3>Paso 3 · Calibración por bisección</h3>
-        <p>El parámetro <code style="color:var(--code)">front_lobe_scale</code> controla el tamaño de los lóbulos alares frontales.
-           Aumentarlo desplaza masa hacia adelante (x positivo), acercando x̄ a cero.
-           Se usa búsqueda binaria hasta converger:</p>
-        <div class="code-snippet">bisection:  f(scale) = x_CM(scale)  →  buscar raíz = 0
-iteración 1:  scale = 2.5   → x_CM = +0.42 mm  (muy atrás)
-iteración 2:  scale = 2.7   → x_CM = -0.18 mm  (muy adelante)
-iteración 3:  scale = 2.60  → x_CM = +0.031 mm
-iteración 4:  scale = 2.604 → x_CM = +0.012 mm
-iteración 5:  scale = 2.6045→ x_CM =  0.010 mm  ✓ convergido</div>
+        <h3>Paso 3 · Calibración por bisección (Teorema del Valor Intermedio)</h3>
+        <p>La función f(s) = x̄(s) − x_caparazón es continua y monótona: mayor s → más masa
+           frontal → x̄ crece. Por el TVI existe un único s* donde f(s*) = 0.
+           El algoritmo de bisección lo localiza:</p>
+        <div class="code-snippet">Objetivo: f(s) = x̄(s) − (−26.4 mm) = 0
+              Función evaluada con Monte Carlo (N = 500 000 muestras/iteración)
+
+iteración 1:  [a=0.50, b=1.20]  →  m = 0.85  →  Δx = −0.63 mm  (f &lt; 0 → a = m)
+iteración 2:  [a=0.85, b=1.20]  →  m = 1.025 →  Δx = +0.87 mm  (f &gt; 0 → b = m)
+iteración 3:  [a=0.85, b=1.025] →  m = 0.938 →  Δx = +0.17 mm  (f &gt; 0 → b = m)
+iteración 4:  [a=0.85, b=0.938] →  m = 0.894 →  Δx = −0.21 mm  (f &lt; 0 → a = m)
+iteración 5:  [a=0.894,b=0.938] →  m = 0.913 →  Δx = −0.008 mm  ✓  |f| &lt; 0.05 mm</div>
         <div class="highlight-box amber">
-          <p><strong>Resultado:</strong> front_lobe_scale = <strong style="color:var(--amber)">2.604525</strong> → offset XY = <strong style="color:var(--amber)">0.010 mm</strong> (tolerancia &lt; 0.15 mm).</p>
+          <p><strong>Resultado:</strong> front_lobe_scale = <strong style="color:var(--amber)">0.913</strong> → offset XY = <strong style="color:var(--amber)">0.008 mm</strong>
+          &nbsp;(tolerancia de impresión &lt; 0.15 mm  ✓).
+          Script: <code style="color:var(--code)">calibracion_biseccion.py</code></p>
         </div>
       </div>
 
       <div class="tl-item">
-        <h3>Paso 4 · Verificación del STL final</h3>
-        <p>La misma función χ_T que usamos para calcular el CM genera la malla voxelizada para impresión:</p>
-        <div class="code-snippet">Grid: 431 × 297 × 124 vóxeles  (resolución 0.33 mm)
-Triángulos generados: 393,732
-Malla cerrada: ✓   Normales invertidas: 0   Triángulos degenerados: 0
-Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
+        <h3>Paso 4 · Centro de masa y punto de equilibrio</h3>
+        <p>Con s = 0.913 calibrado, los valores finales del CM en las dos orientaciones son:</p>
+        <div class="formula-block">
+          <div class="f-row"><span class="f-lhs">x̄</span><span class="f-rhs">= −26.4 mm</span><span class="f-comment">← coincide con x_ápex (error &lt; 0.01 mm)</span></div>
+          <div class="f-row"><span class="f-lhs">ȳ</span><span class="f-rhs">≈ 0 mm</span><span class="f-comment">← simetría bilateral exacta</span></div>
+          <div class="f-row"><span class="f-lhs">z̄ (orig)</span><span class="f-rhs">= +12.0 mm</span><span class="f-comment">← en coords SCAD (nose=0)</span></div>
+          <div class="f-row"><span class="f-lhs">z_CM (nuevo)</span><span class="f-rhs">= z_ápex − z̄ = 22.0 − 12.0 = 10.0 mm</span><span class="f-comment">← sobre el ápex, orientación boca-abajo</span></div>
+        </div>
+        <p style="font-size:0.88rem; margin-top:12px;">
+          El punto de apoyo real es el <strong>ápex del caparazón</strong>. Por eso, una vez encontrado el CM,
+          lo siguiente no es volver a integrar, sino comparar su posición con ese apoyo.
+          La condición horizontal es que la proyección del CM caiga exactamente sobre ese punto.
+        </p>
+        <div class="formula-block" style="margin-top:14px;">
+          <div class="f-row"><span class="f-lhs">Δx</span><span class="f-rhs">= x̄ − x_apoyo</span><span class="f-comment">← si Δx = 0 no hay torque hacia delante o atrás</span></div>
+          <div class="f-row"><span class="f-lhs">Δy</span><span class="f-rhs">= ȳ − y_apoyo</span><span class="f-comment">← si Δy = 0 no hay torque lateral</span></div>
+          <div class="f-row"><span class="f-lhs">Condición</span><span class="f-rhs">Δx ≈ 0 y Δy ≈ 0</span><span class="f-comment">← el peso cae justo sobre el apoyo</span></div>
+        </div>
+        <div class="grid-2" style="margin-top:16px; gap:16px;">
+          <div style="background:rgba(74,180,100,0.08); border:1px solid rgba(74,180,100,0.24); border-radius:12px; padding:16px;">
+            <p style="color:var(--green); font-weight:700; margin-bottom:8px;">Cuando el CM cae sobre el apoyo</p>
+            <p style="font-size:0.84rem; margin:0;">
+              La gravedad baja verticalmente por el mismo sitio donde toca la pieza.
+              Entonces no hay brazo de palanca lateral y la tortuga no “elige” un lado para caer.
+            </p>
+          </div>
+          <div style="background:rgba(224,80,80,0.07); border:1px solid rgba(224,80,80,0.22); border-radius:12px; padding:16px;">
+            <p style="color:var(--red); font-weight:700; margin-bottom:8px;">Cuando el CM queda corrido</p>
+            <p style="font-size:0.84rem; margin:0;">
+              Aparece un torque. Si el CM cae adelantado, la tortuga rota hacia delante;
+              si cae a un lado, rota lateralmente. Esa es la relación directa entre matemáticas y equilibrio.
+            </p>
+          </div>
+        </div>
+        <div class="code-snippet">STL final (caparazón hacia abajo): 393 732 triángulos
+Dimensiones: 95.7 × 88.0 × 26.4 mm   Malla cerrada ✓
+Archivo: tortuga_caparazon_impresion.stl</div>
       </div>
 
     </div>
@@ -772,15 +1000,15 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
     <div class="grid-2" style="margin-top: 24px; margin-bottom: 24px;">
 
       <div class="card">
-        <h3 style="color:var(--green); margin-bottom: 12px;">El disco oblato de apoyo</h3>
-        <p>La punta del hocico no es un punto sino un <strong>disco oblato</strong> (elipsoide
-           achatado). Su curvatura en la base determina qué tan rígida es la posición de equilibrio.</p>
+        <h3 style="color:var(--green); margin-bottom: 12px;">La cúpula del caparazón como apoyo</h3>
+        <p>El caparazón ya es un <strong>elipsoide convexo</strong> de gran curvatura. Su polo superior
+           actúa directamente como superficie de contacto — sin necesidad de disco adicional.</p>
         <div class="formula-block">
-          <div class="f-row"><span class="f-lhs">a</span><span class="f-rhs">= 4.62 mm</span><span class="f-comment">← radio horizontal</span></div>
-          <div class="f-row"><span class="f-lhs">b</span><span class="f-rhs">= 0.55 mm</span><span class="f-comment">← radio vertical</span></div>
-          <div class="f-row"><span class="f-lhs">R_eff</span><span class="f-rhs">= a² / b = <strong style="color:var(--amber)">38.8 mm</strong></span><span class="f-comment">← radio de curvatura</span></div>
+          <div class="f-row"><span class="f-lhs">a</span><span class="f-rhs">= 21.45 mm</span><span class="f-comment">← semi-eje horizontal (1.95 × 11)</span></div>
+          <div class="f-row"><span class="f-lhs">c</span><span class="f-rhs">= 10.45 mm</span><span class="f-comment">← semi-eje vertical (0.95 × 11)</span></div>
+          <div class="f-row"><span class="f-lhs">R_eff</span><span class="f-rhs">= a² / c = <strong style="color:var(--amber)">44.0 mm</strong></span><span class="f-comment">← radio de curvatura en el ápex</span></div>
         </div>
-        <p style="font-size:0.88rem;">La fórmula R_eff = a²/b viene de la curvatura principal de un elipsoide en su polo.</p>
+        <p style="font-size:0.88rem;">La fórmula R_eff = a²/c es la curvatura principal del elipsoide en su polo. Al ser la cúpula del caparazón naturalmente grande, R_eff supera al del antiguo disco nasal.</p>
       </div>
 
       <div class="card">
@@ -790,11 +1018,11 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
         <div class="highlight-box green" style="margin: 12px 0;">
           <p style="font-size: 1.1rem; font-family: monospace; text-align: center;">
             z_CM &lt; R_eff<br>
-            <strong style="font-size: 1.3rem;">7.5 mm ≪ 38.8 mm</strong>
+            <strong style="font-size: 1.3rem;">10.0 mm ≪ 44.0 mm</strong>
           </p>
         </div>
-        <p style="font-size:0.88rem;">Margen de estabilidad = 31.3 mm.
-           Ángulo máximo antes de volcar: <strong style="color:var(--text)">31.6°</strong>.</p>
+        <p style="font-size:0.88rem;">Margen de estabilidad = 34.0 mm.
+           Ángulo máximo antes de volcar: <strong style="color:var(--text)">65°</strong> — la cúpula ancha da una zona estable excepcionalmente grande.</p>
       </div>
 
     </div>
@@ -806,7 +1034,7 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
       </p>
       <canvas id="stabilityCanvas" width="540" height="280"></canvas>
       <p style="font-size: 12px; color: var(--muted); margin-top: 12px;">
-        El CM (punto verde) está muy por debajo del centro de curvatura (punto naranja). Mientras se conserve esa relación, la tortuga vuelve sola a la posición vertical.
+        El CM (punto verde) está muy por debajo del centro de curvatura (punto naranja). La cúpula amplia del caparazón garantiza que cualquier inclinación genere un torque restaurador.
       </p>
     </div>
 
@@ -826,34 +1054,90 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
         <tbody>
           <tr>
             <td>Mesa plana</td>
-            <td class="val-num">38.8 mm (R_eff)</td>
-            <td class="val-num">7.5 mm</td>
-            <td>7.5 ≪ 38.8</td>
-            <td class="ok">✓ ESTABLE · 31.6°</td>
+            <td class="val-num">44.0 mm (R_eff cúpula)</td>
+            <td class="val-num">10.0 mm</td>
+            <td>10.0 ≪ 44.0</td>
+            <td class="ok">✓ ESTABLE · 65°</td>
           </tr>
           <tr>
-            <td>Punta del dedo (8 mm)</td>
-            <td class="val-num">8 mm</td>
-            <td class="val-num">7.5 mm</td>
-            <td>7.5 &lt; 8.0</td>
+            <td>Punta del dedo (10 mm)</td>
+            <td class="val-num">12.9 mm (R_comb)</td>
+            <td class="val-num">10.0 mm</td>
+            <td>10.0 &lt; 12.9</td>
             <td class="ok">✓ ESTABLE</td>
           </tr>
           <tr>
-            <td>Punta del dedo (10–12 mm)</td>
-            <td class="val-num">10–12 mm</td>
-            <td class="val-num">7.5 mm</td>
-            <td>7.5 &lt; 10–12</td>
-            <td class="ok">✓ ESTABLE con margen</td>
+            <td>Punta del dedo (12–15 mm)</td>
+            <td class="val-num">16–24 mm (R_comb)</td>
+            <td class="val-num">10.0 mm</td>
+            <td>10.0 &lt; 16–24</td>
+            <td class="ok">✓ ESTABLE con amplio margen</td>
           </tr>
           <tr>
-            <td>Punta de lápiz</td>
-            <td class="val-num">— (guiado lateral)</td>
-            <td class="val-num">7.5 mm</td>
-            <td>Disco encaja y guía</td>
+            <td>Superficie convexa cualquiera</td>
+            <td class="val-num">R_comb = R_cap · R_s / (R_cap − R_s)</td>
+            <td class="val-num">10.0 mm</td>
+            <td>z_CM &lt; R_comb si R_s &lt; 13 mm</td>
             <td class="ok">✓ ESTABLE</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Hueco vs sólido -->
+    <div class="card reveal" style="margin-top: 24px; border-color: rgba(42,207,186,0.3);">
+      <h3 style="color:var(--teal); margin-bottom: 14px;">¿Caparazón hueco o sólido? — el hueco estabiliza más</h3>
+      <p>El modelo usa un caparazón <strong>hueco</strong>: se sustrae una elipsoide interior de
+         semi-ejes (1.48, 1.45, 0.62) u centrada en (−2.42, 0, 1.08) u.
+         Esto no es solo para ahorrar material — tiene consecuencias directas sobre la estabilidad:</p>
+
+      <div class="grid-2" style="margin-top:16px; gap:16px;">
+        <div style="background:rgba(74,180,100,0.08); border:1px solid rgba(74,180,100,0.25); border-radius:12px; padding:16px;">
+          <p style="color:var(--green); font-weight:700; margin-bottom:8px;">✓ Caparazón hueco (modelo actual)</p>
+          <div class="formula-block" style="margin-bottom:12px;">
+            <div class="f-row" style="font-size:0.8rem;">
+              <span class="f-lhs" style="min-width:80px;">Masa cúpula</span>
+              <span class="f-rhs" style="color:var(--green);">Reducida (solo paredes)</span>
+            </div>
+            <div class="f-row" style="font-size:0.8rem;">
+              <span class="f-lhs" style="min-width:80px;">z_CM</span>
+              <span class="f-rhs" style="color:var(--green);">↓ más bajo</span>
+              <span class="f-comment">← las patas/cabeza pesan más</span>
+            </div>
+            <div class="f-row" style="font-size:0.8rem;">
+              <span class="f-lhs" style="min-width:80px;">Margen</span>
+              <span class="f-rhs" style="color:var(--green);">z_CM ≪ R_eff &nbsp; → &nbsp; más estable</span>
+            </div>
+          </div>
+          <p style="font-size:0.8rem; margin:0;">La masa eliminada estaba en z ≈ 11.9 mm (interior de la cúpula). Al quitarla, las partes más bajas (patas, cola) dominan el CM → z_CM baja.</p>
+        </div>
+
+        <div style="background:rgba(224,80,80,0.07); border:1px solid rgba(224,80,80,0.22); border-radius:12px; padding:16px;">
+          <p style="color:var(--red); font-weight:700; margin-bottom:8px;">✗ Caparazón sólido</p>
+          <div class="formula-block" style="margin-bottom:12px;">
+            <div class="f-row" style="font-size:0.8rem;">
+              <span class="f-lhs" style="min-width:80px;">Masa cúpula</span>
+              <span class="f-rhs" style="color:var(--red);">Alta (interior lleno)</span>
+            </div>
+            <div class="f-row" style="font-size:0.8rem;">
+              <span class="f-lhs" style="min-width:80px;">z_CM</span>
+              <span class="f-rhs" style="color:var(--red);">↑ más alto</span>
+              <span class="f-comment">← cúpula pesa más</span>
+            </div>
+            <div class="f-row" style="font-size:0.8rem;">
+              <span class="f-lhs" style="min-width:80px;">Margen</span>
+              <span class="f-rhs" style="color:var(--red);">z_CM se acerca a R_eff → menos margen</span>
+            </div>
+          </div>
+          <p style="font-size:0.8rem; margin:0;">Un caparazón macizo sube el CM hacia la cúpula, reduciendo el margen de estabilidad R_eff − z_CM. Además usa el doble de filamento.</p>
+        </div>
+      </div>
+
+      <div class="highlight-box green" style="margin-top:16px;">
+        <p><strong>Conclusión:</strong> el caparazón hueco es mejor en todos los aspectos —
+           <strong>más estable</strong> (z_CM menor), <strong>más ligero</strong> (menos filamento)
+           y conserva la misma curvatura exterior R_eff = 44 mm que garantiza el equilibrio.</p>
+      </div>
     </div>
 
     <!-- Comparación de magnitudes -->
@@ -862,23 +1146,23 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
       <div class="bar-wrap" id="barChart">
         <div class="bar-row">
           <span class="bar-label">z_CM</span>
-          <div class="bar-track"><div class="bar-fill green" data-target="19.3" style="width:0%"></div></div>
-          <span class="bar-val">7.5 mm</span>
+          <div class="bar-track"><div class="bar-fill green" data-target="22.7" style="width:0%"></div></div>
+          <span class="bar-val">10.0 mm</span>
         </div>
         <div class="bar-row">
           <span class="bar-label">R_dedo</span>
-          <div class="bar-track"><div class="bar-fill teal" data-target="25.8" style="width:0%"></div></div>
-          <span class="bar-val">10 mm</span>
+          <div class="bar-track"><div class="bar-fill teal" data-target="29.3" style="width:0%"></div></div>
+          <span class="bar-val">12.9 mm</span>
         </div>
         <div class="bar-row">
           <span class="bar-label">R_eff</span>
           <div class="bar-track"><div class="bar-fill amber" data-target="100" style="width:0%"></div></div>
-          <span class="bar-val">38.8 mm</span>
+          <span class="bar-val">44.0 mm</span>
         </div>
       </div>
       <p style="font-size: 0.85rem; margin: 0;">
-        La barra naranja (R_eff = 38.8 mm) es mucho más grande que la verde (z_CM = 7.5 mm):
-        eso garantiza estabilidad con amplio margen en cualquier superficie.
+        La barra naranja (R_eff = 44.0 mm) es mucho más grande que la verde (z_CM = 10.0 mm):
+        la cúpula natural del caparazón ofrece mayor R_eff que el antiguo disco nasal (38.8 mm), con margen de 34.0 mm.
       </p>
     </div>
 
@@ -896,10 +1180,10 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
         <h3 style="color:var(--green); margin-bottom: 12px;">Parámetros del modelo</h3>
         <div class="formula-block">
           <div class="f-row"><span class="f-lhs">Escala</span><span class="f-rhs">11 mm / unidad</span></div>
-          <div class="f-row"><span class="f-lhs">Scale (F.L.)</span><span class="f-rhs">2.604525</span></div>
-          <div class="f-row"><span class="f-lhs">Disco apoyo</span><span class="f-rhs">ø 9.2 mm · h 1.1 mm</span></div>
-          <div class="f-row"><span class="f-lhs">Holgura</span><span class="f-rhs">0.66 mm (solo el disco toca)</span></div>
-          <div class="f-row"><span class="f-lhs">STL dims</span><span class="f-rhs">118.1 × 93.1 × 24.4 mm</span></div>
+          <div class="f-row"><span class="f-lhs">Scale (F.L.)</span><span class="f-rhs">0.913</span></div>
+          <div class="f-row"><span class="f-lhs">Apoyo</span><span class="f-rhs">cúpula del caparazón · R_eff 44.0 mm</span></div>
+          <div class="f-row"><span class="f-lhs">Holgura</span><span class="f-rhs">0 mm adicional — el caparazón toca directo</span></div>
+          <div class="f-row"><span class="f-lhs">STL dims</span><span class="f-rhs">95.7 × 88.0 × 26.4 mm</span></div>
         </div>
       </div>
       <div class="card">
@@ -911,7 +1195,7 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
           <li style="margin-bottom: 6px;"><strong style="color:var(--text)">Bambu Studio</strong> — X1, A1</li>
         </ul>
         <div class="highlight-box green" style="margin-top: 16px;">
-          <p>Orientar la tortuga con el disco hacia abajo (z=0 es el disco). No requiere soporte en el hocico.</p>
+          <p>Orientar la tortuga con el ápex del caparazón hacia abajo (z=0). No requiere disco nasal ni soporte adicional — el caparazón es la base.</p>
         </div>
       </div>
     </div>
@@ -923,10 +1207,9 @@ Dimensiones STL: 118.1 × 93.1 × 24.4 mm</div>
   <section id="visor" class="reveal">
     <div class="section-label"><span></span>Visualización</div>
     <h2>Modelo 3D interactivo</h2>
-    <p>El visor muestra la misma geometría utilizada para el cálculo. El punto naranja es el disco de
-       apoyo en el hocico; el punto verde es el centro de masa calculado.</p>
-    <div class="viewer-wrap" style="margin-top: 20px;">
-      <iframe src="tortuga_3d_interactiva.html" title="Visor 3D de la tortuga"></iframe>
+    <p>Geometría exacta del modelo SCAD. <strong style="color:var(--amber)">Punto naranja</strong>: ápex del caparazón (contacto, z=0). <strong style="color:var(--green)">Punto verde</strong>: centro de masa calculado. Arrastra para rotar, scroll para zoom.</p>
+    <div class="viewer-wrap" style="margin-top: 20px; height: 520px; position: relative; overflow: hidden; border-radius: var(--r);">
+      <canvas id="turtle3d" style="width:100%;height:100%;display:block;cursor:grab;"></canvas>
     </div>
   </section>
 
@@ -967,9 +1250,9 @@ let countersStarted = false;
 const counterObserver = new IntersectionObserver((entries) => {
   if (entries[0].isIntersecting && !countersStarted) {
     countersStarted = true;
-    animateCounter(document.getElementById('cnt-offset'), 0.010, 3, 1400);
-    animateCounter(document.getElementById('cnt-reff'),   38.8,  1, 1600);
-    animateCounter(document.getElementById('cnt-angle'),  31.6,  1, 1800);
+    animateCounter(document.getElementById('cnt-offset'), 0.008, 3, 1400);
+    animateCounter(document.getElementById('cnt-reff'),   44.0,  1, 1600);
+    animateCounter(document.getElementById('cnt-angle'),  65.0,  1, 1800);
     animateCounter(document.getElementById('cnt-triangles'), 393732, 0, 2000);
   }
 }, { threshold: 0.3 });
@@ -995,120 +1278,143 @@ if (barSection) barObserver.observe(barSection);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
 
+  // Physical proportions: R_eff=44mm, z_CM=10mm
+  // Visual scale: 1 mm = 4px → R_eff_v = 176px, z_CM_v = 40px
+  const scale   = 4;
+  const rEff_v  = 44 * scale;   // 176 px — radio de curvatura visual
+  const zCM_v   = 10 * scale;   // 40 px  — altura del CM visual
+  const a_v     = 21.45 * scale; // 86 px — semi-eje horizontal del caparazón
+  const c_v     = 10.45 * scale; // 42 px — semi-eje vertical del caparazón
+
   function draw(t) {
     ctx.clearRect(0, 0, W, H);
 
-    // Background
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, 'rgba(10,15,13,0.0)');
-    bg.addColorStop(1, 'rgba(10,15,13,0.0)');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
+    const cx = W / 2;
+    // contact point is lower, body goes UP from there
+    const contactY = H - 44;
 
-    const cx = W / 2, cy = H - 40;
-    const rEff = 180; // visual radius for R_eff
-    const zCM_visual = 36; // proportional to 7.5/38.8 * rEff
-
-    // Draw arc of curvature
+    // Ground line (flat surface)
     ctx.beginPath();
-    ctx.arc(cx, cy, rEff, Math.PI + 0.45, 2 * Math.PI - 0.45);
-    ctx.strokeStyle = 'rgba(240,160,32,0.35)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Ground line
-    ctx.beginPath();
-    ctx.moveTo(cx - 200, cy);
-    ctx.lineTo(cx + 200, cy);
-    ctx.strokeStyle = 'rgba(74,180,100,0.25)';
+    ctx.moveTo(cx - 230, contactY);
+    ctx.lineTo(cx + 230, contactY);
+    ctx.strokeStyle = 'rgba(74,180,100,0.22)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Tilted turtle outline (subtle)
-    const angle = 0.18 * Math.sin(t * 0.7);
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-
-    // Body ellipse
+    // Arc of curvature (R_eff sphere, centered above contact)
     ctx.beginPath();
-    ctx.ellipse(0, -60, 55, 38, 0, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(74,180,100,0.08)';
-    ctx.strokeStyle = 'rgba(74,180,100,0.3)';
+    ctx.arc(cx, contactY - rEff_v, rEff_v, Math.PI * 0.3, Math.PI * 0.7);
+    ctx.strokeStyle = 'rgba(240,160,32,0.30)';
     ctx.lineWidth = 1.5;
-    ctx.fill();
+    ctx.setLineDash([6, 6]);
     ctx.stroke();
+    ctx.setLineDash([]);
 
-    // Head circle
+    // Tilted turtle silhouette (belly-up, shell at bottom)
+    const tiltAngle = 0.15 * Math.sin(t * 0.65);
+    ctx.save();
+    ctx.translate(cx, contactY);
+    ctx.rotate(tiltAngle);
+
+    // Shell dome — convex surface pointing DOWN (touching ground)
     ctx.beginPath();
-    ctx.ellipse(52, -50, 16, 12, -0.3, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(74,180,100,0.10)';
-    ctx.strokeStyle = 'rgba(74,180,100,0.3)';
+    ctx.ellipse(0, 0, a_v, c_v, 0, 0, Math.PI); // bottom half = dome
+    ctx.fillStyle = 'rgba(74,180,100,0.12)';
+    ctx.strokeStyle = 'rgba(74,180,100,0.45)';
+    ctx.lineWidth = 2;
     ctx.fill();
     ctx.stroke();
 
-    // Axis line from support to CM
+    // Body of turtle (above shell dome)
+    const bodyY = -c_v - 18;
+    ctx.beginPath();
+    ctx.ellipse(0, bodyY, 48, 28, 0, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(74,180,100,0.07)';
+    ctx.strokeStyle = 'rgba(74,180,100,0.22)';
+    ctx.lineWidth = 1;
+    ctx.fill();
+    ctx.stroke();
+
+    // Head (patas arriba — small circle above body)
+    ctx.beginPath();
+    ctx.ellipse(-46, bodyY + 4, 14, 10, 0.3, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(74,180,100,0.10)';
+    ctx.strokeStyle = 'rgba(74,180,100,0.25)';
+    ctx.fill();
+    ctx.stroke();
+
+    // Legs sticking up
+    [[-26, -c_v - 56, 6], [26, -c_v - 52, 6],
+     [-38, bodyY - 26, 5], [38, bodyY - 22, 5]].forEach(([lx, ly, lr]) => {
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, lr * 2.2, lr, 0.4, 0, 2 * Math.PI);
+      ctx.strokeStyle = 'rgba(74,180,100,0.20)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Dashed axis from contact to CM
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(0, -zCM_visual);
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineTo(0, -zCM_v);
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Axis to R_eff center
+    // Dashed axis from contact to R_eff center
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(0, -rEff);
-    ctx.strokeStyle = 'rgba(240,160,32,0.18)';
+    ctx.lineTo(0, -rEff_v);
+    ctx.strokeStyle = 'rgba(240,160,32,0.15)';
     ctx.setLineDash([4, 8]);
     ctx.stroke();
     ctx.setLineDash([]);
 
     // CM point (green)
     ctx.beginPath();
-    ctx.arc(0, -zCM_visual, 7, 0, 2 * Math.PI);
+    ctx.arc(0, -zCM_v, 7, 0, 2 * Math.PI);
     ctx.fillStyle = '#4ab464';
     ctx.shadowColor = '#4ab464';
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 14;
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Label CM
     ctx.font = '600 12px Inter, sans-serif';
     ctx.fillStyle = '#4ab464';
-    ctx.fillText('CM  z = 7.5 mm', 12, -zCM_visual + 4);
+    ctx.fillText('CM  z = 10.0 mm', 12, -zCM_v + 4);
 
     ctx.restore();
 
-    // Center of curvature (amber)
+    // Center of curvature (amber) — fixed position above contact
+    const coc_y = contactY - rEff_v;
     ctx.beginPath();
-    ctx.arc(cx, cy - rEff, 6, 0, 2 * Math.PI);
+    ctx.arc(cx, coc_y, 6, 0, 2 * Math.PI);
     ctx.fillStyle = '#f0a020';
     ctx.shadowColor = '#f0a020';
     ctx.shadowBlur = 12;
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    ctx.font = '600 12px Inter, sans-serif';
+    ctx.font = '600 11px Inter, sans-serif';
     ctx.fillStyle = '#f0a020';
-    ctx.fillText('Centro curvatura  R_eff = 38.8 mm', cx + 10, cy - rEff + 4);
+    ctx.fillText('Centro curvatura  R_eff = 44.0 mm', cx + 10, coc_y + 4);
 
-    // Support point
+    // Contact point (amber dot on ground)
     ctx.beginPath();
-    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.arc(cx, contactY, 5, 0, 2 * Math.PI);
     ctx.fillStyle = '#f0a020';
     ctx.fill();
 
     ctx.font = '11px Inter, sans-serif';
     ctx.fillStyle = 'rgba(138,170,144,0.8)';
-    ctx.fillText('Disco de apoyo (hocico)', cx + 8, cy - 8);
+    ctx.fillText('Ápex del caparazón (contacto)', cx + 8, contactY - 8);
 
-    // Label R_eff arrow
+    // R_eff vertical arrow
     ctx.beginPath();
-    ctx.moveTo(cx - 8, cy);
-    ctx.lineTo(cx - 8, cy - rEff);
+    ctx.moveTo(cx - 10, contactY);
+    ctx.lineTo(cx - 10, coc_y);
     ctx.strokeStyle = 'rgba(240,160,32,0.4)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
@@ -1116,9 +1422,9 @@ if (barSection) barObserver.observe(barSection);
     ctx.font = 'bold 11px monospace';
     ctx.fillStyle = 'rgba(240,160,32,0.7)';
     ctx.save();
-    ctx.translate(cx - 22, cy - rEff / 2);
+    ctx.translate(cx - 24, contactY - rEff_v / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText('R_eff = 38.8 mm', -40, 0);
+    ctx.fillText('R_eff = 44.0 mm', -44, 0);
     ctx.restore();
   }
 
@@ -1129,6 +1435,253 @@ if (barSection) barObserver.observe(barSection);
     requestAnimationFrame(loop);
   }
   loop();
+})();
+</script>
+
+<!-- ── VISOR 3D (Three.js inline) ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function initTurtle3D() {
+  const canvas = document.getElementById('turtle3d');
+  if (!canvas) return;
+
+  /* ── renderer ── */
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0a0f0d, 1);
+  renderer.shadowMap.enabled = false;
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 800);
+  camera.up.set(0, 0, 1);   // Z hacia arriba (igual que SCAD)
+
+  /* ── lighting ── */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.50));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  sun.position.set(50, -80, 120);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x80ffcc, 0.20);
+  fill.position.set(-80, 60, 30);
+  scene.add(fill);
+
+  /* ── scale: 1 SCAD unit = 11 mm ── */
+  const S = 11;
+
+  /* ── materials ── */
+  const mShell = new THREE.MeshPhongMaterial({ color:0x246b3a, shininess:80 });
+  const mBody  = new THREE.MeshPhongMaterial({ color:0x3aaa60, shininess:40 });
+  const mLimb  = new THREE.MeshPhongMaterial({ color:0x2d9050, shininess:25 });
+  const mHead  = new THREE.MeshPhongMaterial({ color:0x45b86a, shininess:35 });
+
+  /* ── helpers ── */
+  function ellipsoid(cx, cy, cz, ax, ay, az, mat) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 22), mat);
+    m.scale.set(ax*S, ay*S, az*S);
+    m.position.set(cx*S, cy*S, cz*S);
+    scene.add(m); return m;
+  }
+
+  /* capsule: cylinder + hemisphere caps (usado solo para cuello/hocico) */
+  function capsule(p0, p1, r, mat) {
+    const a = new THREE.Vector3(...p0.map(v=>v*S));
+    const b = new THREE.Vector3(...p1.map(v=>v*S));
+    const rS = r*S, dir3 = b.clone().sub(a), len = dir3.length();
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(rS,rS,len,16,1,false), mat);
+    cyl.position.copy(mid);
+    cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir3.clone().normalize());
+    scene.add(cyl);
+    [a, b].forEach(pt => {
+      const sp = new THREE.Mesh(new THREE.SphereGeometry(rS,14,10), mat);
+      sp.position.copy(pt); scene.add(sp);
+    });
+  }
+
+  /* cylinder: solo cilindro puro, sin esferas (para brazos y patas) */
+  function cylinder(p0, p1, r, mat) {
+    const a = new THREE.Vector3(...p0.map(v=>v*S));
+    const b = new THREE.Vector3(...p1.map(v=>v*S));
+    const rS = r*S, dir3 = b.clone().sub(a), len = dir3.length();
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(rS,rS,len,16,1,false), mat);
+    cyl.position.copy(mid);
+    cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir3.clone().normalize());
+    scene.add(cyl);
+  }
+
+  /* ────────────────────────────────────────────────────────────────
+     ORIENTACIÓN CORRECTA: tortuga AL DERECHO
+     Coordenadas SCAD puras (sin flip).
+     • z = 0  →  plano del suelo (hocico / patas)
+     • z crece hacia arriba → cúpula del caparazón en z≈1.05 u = 11.5 mm
+     • El punto más bajo del caparazón (z = 0.10 u = 1.1 mm) es el CONTACTO
+     El caparazón mira hacia arriba; las patas cuelgan hacia abajo
+     tocando la superficie. El CM está ~9.7 mm sobre el hocico (z=9.7 mm).
+     Para el balance, la superficie de contacto es la parte INFERIOR del
+     caparazón (z=1.1 mm), curva convexa con R_eff = 44 mm.
+  ──────────────────────────────────────────────────────────────── */
+
+  // ── Caparazón (exterior + hueco interior simulado con doble capa) ──
+  ellipsoid(-2.40, 0, 1.05,  1.95, 1.90, 0.95, mShell);
+  // capa interior oscura para efecto de profundidad
+  ellipsoid(-2.42, 0, 1.08,  1.46, 1.43, 0.60,
+    new THREE.MeshPhongMaterial({ color:0x0d1a10, shininess:5,
+      side: THREE.BackSide, transparent:true, opacity:0.70 }));
+
+  // ── Cuello ──
+  capsule([-1.55,0,0.72], [-0.55,0,0.50], 0.22, mBody);
+
+  // ── Cabeza ──
+  ellipsoid(-0.26, 0, 0.44,  0.56, 0.38, 0.30, mHead);
+
+  // ── Hocico ──
+  capsule([-0.08,0,0.26], [0.04,0,0.28], 0.09, mHead);
+
+  // ── Aletas frontales (brazos) — cilindros puros desde el lateral del caparazón ──
+  cylinder([-1.80, 0.60, 0.90], [ 0.60,  2.20, 0.85], 0.16, mLimb);
+  cylinder([-1.80,-0.60, 0.90], [ 0.60, -2.20, 0.85], 0.16, mLimb);
+
+  // ── Patas traseras — cilindros puros desde los lados traseros del caparazón ──
+  cylinder([-3.10,  0.90, 0.85], [-4.60,  1.80, 0.75], 0.13, mLimb);
+  cylinder([-3.10, -0.90, 0.85], [-4.60, -1.80, 0.75], 0.13, mLimb);
+
+  // ── Cola ──
+  capsule([-4.10,0,0.68], [-5.30,0,0.60], 0.08, mBody);
+
+  /* ────────────────────────────────────────────────────────────────
+     SUPERFICIE / PLANO DE APOYO
+     La parte inferior del caparazón (z = 0.10 u = 1.1 mm) toca la
+     superficie. Mostramos un plano sutil en esa altura.
+  ──────────────────────────────────────────────────────────────── */
+  const Z_CONTACT = 0.10 * S;   // 1.1 mm — fondo del caparazón
+
+  // Plano de la superficie (pequeño, 120×100 mm)
+  const gPlane = new THREE.PlaneGeometry(120, 100);
+  const mPlane = new THREE.MeshBasicMaterial({
+    color:0x4ab464, transparent:true, opacity:0.05, side:THREE.DoubleSide });
+  const plane = new THREE.Mesh(gPlane, mPlane);
+  plane.position.set(-2.40*S, 0, Z_CONTACT);
+  scene.add(plane);
+
+  // Grid lines
+  const gridHelper = new THREE.GridHelper(120, 10, 0x4ab464, 0x1a3a20);
+  gridHelper.rotation.x = Math.PI / 2;
+  gridHelper.position.set(-2.40*S, 0, Z_CONTACT - 0.2);
+  gridHelper.material.transparent = true;
+  gridHelper.material.opacity = 0.12;
+  scene.add(gridHelper);
+
+  /* ── Punto de contacto naranja — ápex inferior del caparazón ── */
+  // El ápex inferior del elipsoide (centro en z=1.05, semi-eje c=0.95)
+  // está en z = (1.05 - 0.95)*S = 1.1 mm; en x = -2.40*S
+  const Z_APEX_BOTTOM = (1.05 - 0.95) * S;  // = 1.1 mm
+  const apexPos = new THREE.Vector3(-2.40*S, 0, Z_APEX_BOTTOM);
+
+  const apexMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(2.8, 18, 14),
+    new THREE.MeshBasicMaterial({ color:0xf0a020 }));
+  apexMesh.position.copy(apexPos);
+  scene.add(apexMesh);
+
+  // Anillo pulsante alrededor del contacto
+  const ringMat = new THREE.MeshBasicMaterial({ color:0xf0a020, transparent:true, opacity:0.5 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.7, 8, 40), ringMat);
+  ring.position.copy(apexPos);
+  ring.rotation.x = Math.PI / 2;
+  scene.add(ring);
+
+  /* ── Centro de masa (verde brillante) ── */
+  // z_CM ≈ 9.7 mm sobre el hocico (coord SCAD z=0), x ≈ -26.4 mm (sobre el ápex)
+  const Z_CM = 9.7;   // mm en coords SCAD → mismo valor en mm
+  const cmPos = new THREE.Vector3(-2.40*S, 0, Z_CM);
+  const cmMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(3.2, 18, 14),
+    new THREE.MeshBasicMaterial({ color:0x4af070 }));
+  cmMesh.position.copy(cmPos);
+  scene.add(cmMesh);
+
+  // Línea vertical: contacto → CM
+  const axisGeo = new THREE.BufferGeometry().setFromPoints([
+    apexPos.clone(), cmPos.clone()
+  ]);
+  scene.add(new THREE.Line(axisGeo,
+    new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:0.28 })));
+
+  /* ── Resize ── */
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight || 520;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ── Orbit (Z-up) ── */
+  // theta = azimuth (around Z), phi = elevation from zenith
+  let theta = 0.55, phi = 0.82, radius = 190;
+  const target = new THREE.Vector3(-2.40*S, 0, 11.5);
+  let isDragging = false, lastX = 0, lastY = 0, autoRot = true;
+
+  function updateCam() {
+    camera.position.set(
+      target.x + radius * Math.sin(phi) * Math.cos(theta),
+      target.y + radius * Math.sin(phi) * Math.sin(theta),
+      target.z + radius * Math.cos(phi)
+    );
+    camera.lookAt(target);
+  }
+  updateCam();
+
+  canvas.addEventListener('mousedown', e => {
+    isDragging = true; autoRot = false;
+    lastX = e.clientX; lastY = e.clientY;
+    canvas.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mouseup',   () => { isDragging = false; canvas.style.cursor = 'grab'; });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    theta += (e.clientX - lastX) * 0.008;
+    phi    = Math.max(0.08, Math.min(Math.PI - 0.08, phi + (e.clientY - lastY) * 0.008));
+    lastX = e.clientX; lastY = e.clientY;
+    updateCam();
+  });
+  canvas.addEventListener('wheel', e => {
+    radius = Math.max(70, Math.min(450, radius + e.deltaY * 0.35));
+    updateCam(); e.preventDefault();
+  }, { passive: false });
+
+  // Touch
+  let lastDist = 0, lastTX = 0, lastTY = 0, touching = false;
+  canvas.addEventListener('touchstart', e => {
+    autoRot = false;
+    if (e.touches.length === 1) { touching = true; lastTX = e.touches[0].clientX; lastTY = e.touches[0].clientY; }
+    if (e.touches.length === 2)  lastDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    e.preventDefault();
+  }, { passive:false });
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 1 && touching) {
+      theta += (e.touches[0].clientX - lastTX) * 0.008;
+      phi    = Math.max(0.08, Math.min(Math.PI-0.08, phi + (e.touches[0].clientY - lastTY)*0.008));
+      lastTX = e.touches[0].clientX; lastTY = e.touches[0].clientY; updateCam();
+    }
+    if (e.touches.length === 2) {
+      const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      radius = Math.max(70, Math.min(450, radius - (d - lastDist)*0.5));
+      lastDist = d; updateCam();
+    }
+    e.preventDefault();
+  }, { passive:false });
+  canvas.addEventListener('touchend', () => { touching = false; });
+
+  /* ── Animation loop ── */
+  function animate() {
+    requestAnimationFrame(animate);
+    if (autoRot) { theta += 0.005; updateCam(); }
+    ringMat.opacity = 0.35 + 0.22 * Math.sin(Date.now() * 0.0028);
+    renderer.render(scene, camera);
+  }
+  animate();
 })();
 </script>
 </body>

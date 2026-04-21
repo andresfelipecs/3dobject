@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tortuga v1 vs v2 — comparación de equilibrio</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; background:#0a0f0d; overflow:hidden; color:#c8e6d0; font-family:system-ui,Segoe UI,Arial,sans-serif; }
+  #left, #right { position:absolute; top:0; bottom:0; }
+  #left  { left:0;  width:50%; border-right:1px solid #1e3d28; }
+  #right { right:0; width:50%; }
+  canvas { display:block; width:100%; height:100%; cursor:grab; }
+  canvas:active { cursor:grabbing; }
+  .title {
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    background:rgba(10,20,14,0.85); padding:8px 18px; border-radius:8px;
+    border:1px solid #1e3d28; font-size:14px; font-weight:600;
+  }
+  #left .title  { color:#ff8b6b; }
+  #right .title { color:#4af070; }
+  .stats {
+    position:absolute; bottom:14px; left:14px; right:14px;
+    background:rgba(10,20,14,0.88); padding:10px 14px; border-radius:8px;
+    border:1px solid #1e3d28; font-family:ui-monospace,Menlo,monospace;
+    font-size:12px; line-height:1.55;
+  }
+  .ok  { color:#4af070; }
+  .bad { color:#ff8b6b; }
+  .dim { color:#7aa08a; }
+  #hint {
+    position:absolute; top:14px; left:14px;
+    background:rgba(10,20,14,0.7); padding:6px 10px; border-radius:6px;
+    font-size:11px; color:#6ab08a; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<div id="left">
+  <canvas id="cL"></canvas>
+  <div class="title">v1 actual — NO equilibra en dedo</div>
+  <div class="stats" id="statsL"></div>
+</div>
+<div id="right">
+  <canvas id="cR"></canvas>
+  <div class="title">v2 nueva — equilibrio máximo</div>
+  <div class="stats" id="statsR"></div>
+</div>
+<div id="hint">Arrastra = rotar · Scroll = zoom · Los dos visores rotan sincronizados</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const S = 11.0;
+
+  // ── v1 (SCAD original con corrección x=+2.92 mm) ─────────────────────
+  const V1 = {
+    Z_FLIP: (1.46 + 0.70) * S,
+    cm_scad: [-2.294703, 0.0, 1.0459],
+    shells: [
+      { c: [-2.40, 0, 1.05], a: [1.95, 1.90, 0.95], kind: 'full' },   // SHELL1
+      { c: [-2.2545, 0, 1.46], a: [1.42, 1.46, 0.70], kind: 'full' }, // SHELL2 corregido
+    ],
+    limbs: [
+      { t: 'caps', p0: [-1.95, 0, 0.78], p1: [-0.58, 0, 0.54], r: 0.28 },
+      { t: 'elli', c: [-0.05, 0, 0.48], a: [0.74, 0.48, 0.40] },
+      { t: 'caps', p0: [ 0.22, 0, 0.30], p1: [ 0.42, 0, 0.33], r: 0.12 },
+      { t: 'caps', p0: [-2.18,  0.72, 1.00], p1: [ 0.95,  2.35, 0.76], r: 0.24 },
+      { t: 'caps', p0: [-2.18, -0.72, 1.00], p1: [ 0.95, -2.35, 0.76], r: 0.24 },
+      { t: 'caps', p0: [-3.28,  0.82, 0.94], p1: [-4.88,  1.78, 0.60], r: 0.20 },
+      { t: 'caps', p0: [-3.28, -0.82, 0.94], p1: [-4.88, -1.78, 0.60], r: 0.20 },
+      { t: 'caps', p0: [-4.18, 0, 0.72], p1: [-5.30, 0, 0.58], r: 0.12 },
+    ],
+    R_eff: (1.42*S)*(1.42*S)/(0.70*S),  // ≈31.7 mm
+    z_cm_print: (2.16 - 1.0459) * S,    // ≈12.28 mm
+  };
+
+  // ── v2 (media elipsoide plana, CX calibrado) ─────────────────────────
+  const V2 = {
+    CX: -0.1159,
+    SHELL_A: 2.50, SHELL_C: 0.75, SHELL_ZCUT: 1.25, SHELL_ZTOP: 2.00,
+    Z_FLIP: 2.00 * S,
+    cm_scad: [-0.1159, 0.009/S, (2.00 - 5.61/S)],   // del cálculo
+    limbs: [
+      { t: 'caps', p0: [-0.35, 0, 1.20], p1: [ 0.95, 0, 1.03], r: 0.20 },
+      { t: 'elli', c: [ 1.32, 0, 1.04], a: [0.58, 0.38, 0.30] },
+      { t: 'caps', p0: [ 1.62, 0, 0.94], p1: [ 1.82, 0, 0.95], r: 0.10 },
+      { t: 'caps', p0: [-0.05,  0.55, 1.22], p1: [ 1.85,  2.30, 1.02], r: 0.18 },
+      { t: 'caps', p0: [-0.05, -0.55, 1.22], p1: [ 1.85, -2.30, 1.02], r: 0.18 },
+      { t: 'caps', p0: [-1.00,  0.72, 1.22], p1: [-2.60,  1.80, 1.04], r: 0.16 },
+      { t: 'caps', p0: [-1.00, -0.72, 1.22], p1: [-2.60, -1.80, 1.04], r: 0.16 },
+      { t: 'caps', p0: [-1.80, 0, 1.20], p1: [-3.05, 0, 1.12], r: 0.10 },
+    ],
+    R_eff: (2.50*S)*(2.50*S)/(0.75*S),   // ≈91.7 mm
+    z_cm_print: 5.61,
+  };
+
+  function buildScene(canvasId, D, panelId, color, isV2) {
+    const canvas = document.getElementById(canvasId);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0a0f0d, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 800);
+    camera.up.set(0, 0, 1);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(60, 40, 80); scene.add(key);
+    const fill = new THREE.DirectionalLight(0x88ccaa, 0.35); fill.position.set(-60, -40, 30); scene.add(fill);
+
+    const mShell = new THREE.MeshStandardMaterial({ color: color, roughness: 0.55, transparent:true, opacity:0.95 });
+    const mLimb  = new THREE.MeshStandardMaterial({ color: 0x2d9050, roughness: 0.7 });
+    const mHead  = new THREE.MeshStandardMaterial({ color: 0x45b86a, roughness: 0.7 });
+    const mCM    = new THREE.MeshStandardMaterial({ color: 0x4af070, emissive: 0x1a5030, emissiveIntensity: 0.7 });
+    const mAp    = new THREE.MeshStandardMaterial({ color: 0xf0a020, emissive: 0x6a3a00, emissiveIntensity: 0.7 });
+    const mTable = new THREE.MeshStandardMaterial({ color: 0x14211a, roughness: 0.9 });
+
+    const Z_FLIP = D.Z_FLIP;
+    function toPrint(x, y, z) {
+      return new THREE.Vector3(x*S, y*S, Z_FLIP - z*S);
+    }
+
+    function addEllipsoid(c, a, mat) {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), mat);
+      m.position.copy(toPrint(c[0], c[1], c[2]));
+      m.scale.set(a[0]*S, a[1]*S, a[2]*S);
+      scene.add(m);
+    }
+    function addHalfEllipsoid(c, a, zcut, mat) {
+      // Aproximación visual: usamos un elipsoide completo; la mitad inferior
+      // queda cortada por el plano de la mesa al renderizar (no importa
+      // visualmente porque la mesa la tapa).
+      // Para precisión usamos clipping planes.
+      const m = new THREE.Mesh(new THREE.SphereGeometry(1, 56, 32), mat);
+      m.position.copy(toPrint(c[0], c[1], c[2]));
+      m.scale.set(a[0]*S, a[1]*S, a[2]*S);
+      // Mitad superior en SCAD (z>=zcut) → mitad inferior en print (z_print <= (Z_FLIP - zcut*S))
+      const cutZprint = Z_FLIP - zcut*S;
+      mat.clippingPlanes = [new THREE.Plane(new THREE.Vector3(0, 0, -1), cutZprint)];
+      renderer.localClippingEnabled = true;
+      scene.add(m);
+    }
+    function addCapsule(p0, p1, r, mat) {
+      const P0 = toPrint(p0[0], p0[1], p0[2]);
+      const P1 = toPrint(p1[0], p1[1], p1[2]);
+      const dir = new THREE.Vector3().subVectors(P1, P0);
+      const len = dir.length();
+      const rr  = r * S;
+      const cyl = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, len, 24, 1, true), mat);
+      const mid = new THREE.Vector3().addVectors(P0, P1).multiplyScalar(0.5);
+      cyl.position.copy(mid);
+      cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.clone().normalize());
+      scene.add(cyl);
+      const s1 = new THREE.Mesh(new THREE.SphereGeometry(rr, 24, 16), mat); s1.position.copy(P0); scene.add(s1);
+      const s2 = new THREE.Mesh(new THREE.SphereGeometry(rr, 24, 16), mat); s2.position.copy(P1); scene.add(s2);
+    }
+
+    // Cuerpo
+    if (isV2) {
+      addHalfEllipsoid([D.CX, 0, D.SHELL_ZCUT],
+                       [D.SHELL_A, D.SHELL_A, D.SHELL_C], D.SHELL_ZCUT, mShell);
+    } else {
+      D.shells.forEach(s => addEllipsoid(s.c, s.a, mShell));
+    }
+    D.limbs.forEach((l, i) => {
+      const mat = (i === 1 && l.t === 'elli') ? mHead : mLimb;   // head
+      if (l.t === 'caps') addCapsule(l.p0, l.p1, l.r, mat);
+      else                addEllipsoid(l.c, l.a, mat);
+    });
+
+    // CM
+    const cmPos = toPrint(D.cm_scad[0], D.cm_scad[1], D.cm_scad[2]);
+    const cm = new THREE.Mesh(new THREE.SphereGeometry(1.8, 24, 16), mCM);
+    cm.position.copy(cmPos); scene.add(cm);
+    // Plomada
+    const plumbGeo = new THREE.BufferGeometry().setFromPoints([cmPos.clone(), new THREE.Vector3(cmPos.x, cmPos.y, 0)]);
+    const plumbMat = new THREE.LineDashedMaterial({ color: 0x4af070, dashSize: 1.5, gapSize: 1.0 });
+    const plumb = new THREE.Line(plumbGeo, plumbMat); plumb.computeLineDistances(); scene.add(plumb);
+
+    // Apoyo (polo del caparazón v1 = SHELL2; v2 = media elipsoide)
+    let apPos;
+    if (isV2) {
+      apPos = toPrint(D.CX, 0, D.SHELL_ZTOP);
+    } else {
+      apPos = toPrint(D.shells[1].c[0], 0, D.shells[1].c[2] + D.shells[1].a[2]);
+    }
+    const ap = new THREE.Mesh(new THREE.SphereGeometry(1.8, 24, 16), mAp);
+    ap.position.copy(apPos); scene.add(ap);
+    const axGeo = new THREE.BufferGeometry().setFromPoints([apPos.clone(), new THREE.Vector3(apPos.x, apPos.y, cmPos.z + 6)]);
+    scene.add(new THREE.Line(axGeo, new THREE.LineBasicMaterial({ color: 0xf0a020 })));
+
+    // Dedo (cilindro horizontal a modo de referencia, radio 10 mm)
+    const fingerGroup = new THREE.Group();
+    const finger = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 80, 32), new THREE.MeshStandardMaterial({ color: 0xc89678, roughness: 0.85 }));
+    finger.position.set(apPos.x, 0, -10);   // centro del dedo 10 mm debajo del contacto
+    finger.rotation.z = Math.PI/2;
+    fingerGroup.add(finger);
+    fingerGroup.visible = false;   // empieza apagado; se alterna con el toggle
+    scene.add(fingerGroup);
+
+    // Mesa
+    const table = new THREE.Mesh(new THREE.PlaneGeometry(200, 160), mTable);
+    table.position.z = 0;
+    scene.add(table);
+    const grid = new THREE.GridHelper(180, 18, 0x1e3d28, 0x15281d);
+    grid.rotation.x = Math.PI/2; grid.position.z = 0.02; scene.add(grid);
+
+    // Rellenar estadísticas
+    const dxMm = Math.abs(cmPos.x - apPos.x);
+    // R_comb en dedo 10 mm (fórmula correcta)
+    const R_c10 = D.R_eff * 10 / (D.R_eff + 10);
+    const margin10 = R_c10 - D.z_cm_print;
+    document.getElementById(panelId).innerHTML =
+      `<div>R_eff caparazón:  <b>${D.R_eff.toFixed(1)} mm</b></div>` +
+      `<div>z_CM sobre mesa:  <b>${D.z_cm_print.toFixed(2)} mm</b></div>` +
+      `<div>Δx CM–apoyo:      <b class="${dxMm < 0.1 ? 'ok' : 'bad'}">${dxMm < 0.1 ? '0.0' : dxMm.toFixed(2)} mm</b></div>` +
+      `<div class="dim">Dedo 10 mm → R_comb = ${R_c10.toFixed(2)} mm</div>` +
+      `<div>Margen dedo 10:   <b class="${margin10 > 0 ? 'ok' : 'bad'}">${margin10 > 0 ? '+' : ''}${margin10.toFixed(2)} mm ${margin10 > 0 ? '✓' : '✗ UNSTABLE'}</b></div>`;
+
+    // Cámara
+    const center = new THREE.Vector3(apPos.x, 0, 10);
+    let theta = Math.PI * 0.18, phi = Math.PI * 0.40, radius = 130;
+    function updateCam() {
+      camera.position.set(
+        center.x + radius * Math.sin(phi) * Math.cos(theta),
+        center.y + radius * Math.sin(phi) * Math.sin(theta),
+        center.z + radius * Math.cos(phi));
+      camera.lookAt(center);
+    }
+    updateCam();
+
+    function resize() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize); resize();
+
+    function loop() { requestAnimationFrame(loop); renderer.render(scene, camera); }
+    loop();
+
+    return {
+      canvas, setAngles: (t, p, r) => { theta=t; phi=p; radius=r; updateCam(); },
+      getAngles: () => ({ theta, phi, radius }),
+      toggleFinger: (on) => { fingerGroup.visible = on; table.visible = !on; grid.visible = !on; }
+    };
+  }
+
+  const L = buildScene('cL', V1, 'statsL', 0xd04545, false);
+  const R = buildScene('cR', V2, 'statsR', 0x3ec070, true);
+
+  // Sincronizar controles
+  let theta = Math.PI * 0.18, phi = Math.PI * 0.40, radius = 130;
+  let drag = null;
+  function onDown(e, viewer) { drag = { vw: viewer, x: e.clientX, y: e.clientY, shift: e.shiftKey }; }
+  window.addEventListener('mouseup', () => drag = null);
+  window.addEventListener('mousemove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag.x = e.clientX; drag.y = e.clientY;
+    theta -= dx * 0.008;
+    phi = Math.max(0.12, Math.min(Math.PI - 0.12, phi - dy * 0.008));
+    L.setAngles(theta, phi, radius);
+    R.setAngles(theta, phi, radius);
+  });
+  L.canvas.addEventListener('mousedown', e => onDown(e, L));
+  R.canvas.addEventListener('mousedown', e => onDown(e, R));
+  function onWheel(e) {
+    e.preventDefault();
+    radius = Math.max(40, Math.min(400, radius * (1 + e.deltaY * 0.001)));
+    L.setAngles(theta, phi, radius);
+    R.setAngles(theta, phi, radius);
+  }
+  L.canvas.addEventListener('wheel', onWheel, { passive: false });
+  R.canvas.addEventListener('wheel', onWheel, { passive: false });
+
+  // Tecla F → alternar dedo
+  let fingerOn = false;
+  window.addEventListener('keydown', e => {
+    if (e.key === 'f' || e.key === 'F') {
+      fingerOn = !fingerOn;
+      L.toggleFinger(fingerOn);
+      R.toggleFinger(fingerOn);
+    }
+  });
+})();
+</script>
+</body>
+</html>
